@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Lucas Chiang — Portfolio</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,500&family=IBM+Plex+Mono:wght@400;500&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- Top bar -->
+  <header class="topbar">
+    <button class="menu-btn" id="menuBtn" aria-label="Open navigation" aria-expanded="false" aria-controls="navPanel">
+      <span class="menu-line"></span>
+      <span class="menu-line"></span>
+      <span class="menu-line"></span>
+    </button>
+    <span class="topbar-title">Lucas Chiang</span>
+    <span class="topbar-spacer" aria-hidden="true"></span>
+  </header>
+
+  <!-- Slide-in nav panel, styled like a catalog index -->
+  <nav class="nav-panel" id="navPanel" aria-hidden="true">
+    <ol class="nav-list">
+      <li><a href="#home" data-page="home"><span class="nav-num">01</span><span class="nav-label">Home</span></a></li>
+      <li><a href="#research" data-page="research"><span class="nav-num">02</span><span class="nav-label">Research Projects</span></a></li>
+      <li><a href="#experience" data-page="experience"><span class="nav-num">03</span><span class="nav-label">Experience</span></a></li>
+      <li><a href="#expertise" data-page="expertise"><span class="nav-num">04</span><span class="nav-label">Expertise</span></a></li>
+      <li><a href="#leadership" data-page="leadership"><span class="nav-num">05</span><span class="nav-label">Leadership</span></a></li>
+    </ol>
+  </nav>
+  <div class="nav-overlay" id="navOverlay"></div>
+
+  <main>
+    <!-- HOME -->
+    <section class="page" id="home" data-page="home">
+      <div class="card-tab">No. 01</div>
+      <div class="page-inner home-layout">
+        <div class="home-text">
+          <p class="eyebrow">Portfolio</p>
+          <h1>Lucas Chiang</h1>
+          <p class="tagline">Aspiring electrical engineer with leadership and research experience.</p>
+          <p class="body-copy">
+            Involved in hands-on research spanning low-power energy systems, thermoelectrics,
+            and data-driven analysis, with work presented through posters and a published
+            paper. Comfortable working in team-based technical environments, contributing to
+            project development, and communicating complex ideas clearly.
+          </p>
+          <p class="body-copy">
+            <strong>Education:</strong> River Hill High School — High School Diploma,
+            Electrical and Electronics Engineering, Sep 2022 – May 2026. Relevant coursework:
+            AP Physics C (Mechanics, Electricity &amp; Magnetism), AP Calculus AB/BC, AP Chemistry,
+            AP Computer Science Principles, AP Biology, Differential Equations.
+          </p>
+        </div>
+        <figure class="photo-placeholder">
+          <div class="photo-box"></div>
+          <figcaption>Photo placeholder</figcaption>
+        </figure>
+      </div>
+    </section>
+
+    <!-- RESEARCH PROJECTS -->
+    <section class="page" id="research" data-page="research">
+      <div class="card-tab">No. 02</div>
+      <div class="page-inner">
+        <p class="eyebrow">Section 02</p>
+        <h1>Research Projects</h1>
+
+        <div class="entry-grid">
+          <article class="entry">
+            <figure class="photo-placeholder small">
+              <div class="photo-box"></div>
+              <figcaption>Photo placeholder</figcaption>
+            </figure>
+            <h2>Wearable Thermoelectric Power Systems</h2>
+            <p class="entry-meta">University of Maryland Baltimore County — Jul 2025 to Present</p>
+            <p class="body-copy">
+              Used a 3.3V integrated circuit voltage regulator to charge and discharge
+              capacitors, demonstrating the ability of low-power energy harvesters to act
+              as power supplies; presented findings as a research poster. Took the lead
+              role in printed circuit board fabrication. Currently researching wearable
+              thermoelectric-powered electrocardiographs for use in medical environments.
+            </p>
+            <p class="body-copy">
+              Published as: <em>"Utilization of Commercial Peltier Thermoelectric Generators
+              for Continuous Wearable Device Use,"</em> Oxford Journal of Student Scholarship,
+              Jun 2026. Tested commercial-grade Peltier TEGs for on-body temperature
+              differentials, finding no significant effect from adding more TEGs in series
+              but a significant improvement from adding heat sinks.
+              <a href="https://www.oxfordjss.org/june-2026-vol-8-issue-2/utilization-of-commercial-peltier-thermoelectric-generators-for-continuous-wearable-device-use" target="_blank" rel="noopener">Read the publication →</a>
+            </p>
+          </article>
+
+          <article class="entry">
+            <figure class="photo-placeholder small">
+              <div class="photo-box"></div>
+              <figcaption>Photo placeholder</figcaption>
+            </figure>
+            <h2>Calcium Manganese Oxide Thin Films</h2>
+            <p class="entry-meta">Towson University — Jul 2025 to Aug 2025</p>
+            <p class="body-copy">
+              Created calcium manganese oxide thin films using pulsed laser deposition to
+              enhance electronic performance, then fluorinated the films using spin-coating
+              in a clean room to maintain material properties. Used X-ray diffraction and
+              four-probe resistance measurement to characterize resistance and crystalline
+              structure, and presented findings as a research poster to the research team.
+            </p>
+          </article>
+
+          <article class="entry">
+            <figure class="photo-placeholder small">
+              <div class="photo-box"></div>
+              <figcaption>Photo placeholder</figcaption>
+            </figure>
+            <h2>Exoplanet Light Curve Validation (TOI 5868.01)</h2>
+            <p class="entry-meta">George Mason University — Jun 2024 to Aug 2024</p>
+            <p class="body-copy">
+              Used Python (Jupyter Notebook) and AstroImageJ to analyze light curve data
+              from the George Mason University Observatory on candidate exoplanet TOI
+              5868.01, comparing ground-based observations with James Webb Space Telescope
+              data to validate a predicted transit. Advised by Professor Peter Plavchan.
+            </p>
+            <p class="body-copy">
+              Published as: <em>"Ground-Based Light Curve Follow-Up Validation Observations
+              of TESS Object of Interest (TOI) 5868.01,"</em> George Mason MARS Repository,
+              Aug 2024. Concluded a high likelihood that TOI 5868.01 is a genuine exoplanet,
+              while noting further work is needed to rule out a false positive.
+              <a href="https://digitalcollections.gmu.edu/record/76334?ln=en&p=Toi+5868.01&v=pdf" target="_blank" rel="noopener">Read the publication →</a>
+            </p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- EXPERIENCE -->
+    <section class="page" id="experience" data-page="experience">
+      <div class="card-tab">No. 03</div>
+      <div class="page-inner">
+        <p class="eyebrow">Section 03</p>
+        <h1>Experience</h1>
+
+        <div class="timeline">
+          <div class="timeline-item">
+            <figure class="photo-placeholder small">
+              <div class="photo-box"></div>
+              <figcaption>Photo placeholder</figcaption>
+            </figure>
+            <div class="timeline-text">
+              <h2>Mechanical Engineering Wearable Thermoelectrics Intern</h2>
+              <p class="entry-meta">University of Maryland Baltimore County — Jul 2025 to Present · Baltimore, MD · On-site</p>
+              <p class="body-copy">
+                Used a 3.3V IC voltage regulator to charge and discharge capacitors to
+                demonstrate low-power energy harvesters as viable power supplies; presented
+                this work as a poster. Took the lead role in PCB fabrication. Currently
+                researching wearable thermoelectric-powered electrocardiographs for medical use.
+              </p>
+            </div>
+          </div>
+
+          <div class="timeline-item">
+            <figure class="photo-placeholder small">
+              <div class="photo-box"></div>
+              <figcaption>Photo placeholder</figcaption>
+            </figure>
+            <div class="timeline-text">
+              <h2>CMO Thin Film Research Intern</h2>
+              <p class="entry-meta">Towson University — Jul 2025 to Aug 2025 · Towson, MD · On-site</p>
+              <p class="body-copy">
+                Created calcium manganese oxide thin films via pulsed laser deposition;
+                fluorinated films using spin-coating in a clean room. Used X-ray diffraction
+                and four-probe resistance measurement to assess resistance and crystalline
+                structure. Presented findings as a research poster.
+              </p>
+            </div>
+          </div>
+
+          <div class="timeline-item">
+            <figure class="photo-placeholder small">
+              <div class="photo-box"></div>
+              <figcaption>Photo placeholder</figcaption>
+            </figure>
+            <div class="timeline-text">
+              <h2>NASA Data Science and Scholarly Research Intern</h2>
+              <p class="entry-meta">George Mason University, Schar School of Policy and Government — Jun 2024 to Aug 2024 · Remote</p>
+              <p class="body-copy">
+                Used Python (Jupyter Notebook) and AstroImageJ to analyze light curve data
+                from the George Mason telescope on exoplanet candidate TOI 5868.01, comparing
+                against James Webb Space Telescope data. Published findings in the George
+                Mason MARS Repository.
+              </p>
+            </div>
+          </div>
+
+          <div class="timeline-item">
+            <figure class="photo-placeholder small">
+              <div class="photo-box"></div>
+              <figcaption>Photo placeholder</figcaption>
+            </figure>
+            <div class="timeline-text">
+              <h2>Swim Instructor</h2>
+              <p class="entry-meta">Columbia Association — Jun 2023 to Jan 2025 · Columbia, MD · Part-time</p>
+              <p class="body-copy">
+                Taught children ages 6–12 the four basic swim strokes and foundational water
+                skills. Led large classes and tracked individual progress over six-week
+                sessions to build more in-depth lesson plans.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- EXPERTISE -->
+    <section class="page" id="expertise" data-page="expertise">
+      <div class="card-tab">No. 04</div>
+      <div class="page-inner">
+        <p class="eyebrow">Section 04</p>
+        <h1>Expertise</h1>
+        <figure class="photo-placeholder">
+          <div class="photo-box"></div>
+          <figcaption>Photo placeholder</figcaption>
+        </figure>
+
+        <div class="tag-grid">
+          <div class="tag-card">
+            <h2>Circuit &amp; Hardware Design</h2>
+            <p class="body-copy">Integrated circuits, printed circuit board (PCB) design, circuit design, project engineering.</p>
+          </div>
+          <div class="tag-card">
+            <h2>Research &amp; Data Analysis</h2>
+            <p class="body-copy">Research skills, data analysis, Python, academic publishing, pulsed laser deposition, X-ray diffraction analysis, thin film deposition, fluorination, astrophysics.</p>
+          </div>
+          <div class="tag-card">
+            <h2>Leadership &amp; Project Management</h2>
+            <p class="body-copy">Project management, partner development, sponsorship management, risk management, robotics and robotics design.</p>
+          </div>
+          <div class="tag-card">
+            <h2>Foundational Sciences</h2>
+            <p class="body-copy">Physics, mathematics, chemistry, biology, technical writing.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- LEADERSHIP -->
+    <section class="page" id="leadership" data-page="leadership">
+      <div class="card-tab">No. 05</div>
+      <div class="page-inner">
+        <p class="eyebrow">Section 05</p>
+        <h1>Leadership</h1>
+
+        <div class="entry-grid">
+          <article class="entry">
+            <figure class="photo-placeholder small">
+              <div class="photo-box"></div>
+              <figcaption>Photo placeholder</figcaption>
+            </figure>
+            <h2>Outreach / Design Leader — Team 18996</h2>
+            <p class="entry-meta">FIRST Tech Challenge (STATIC) — Sep 2020 to Present</p>
+            <p class="body-copy">
+              Lead design meetings to brainstorm requirements for robot subsystem designs
+              ahead of competition each of the past 5 years. Lead outreach activities for the
+              past 3 years, organizing three weekly educational events with partners and
+              securing sponsors — raising over $10,000 in one year. Teach STEM principles to
+              underserved kids in Baltimore.
+            </p>
+          </article>
+
+          <article class="entry">
+            <figure class="photo-placeholder small">
+              <div class="photo-box"></div>
+              <figcaption>Photo placeholder</figcaption>
+            </figure>
+            <h2>Student Leadership — River Hill High School</h2>
+            <p class="entry-meta">Sep 2022 to Present</p>
+            <p class="body-copy">
+              Co-President/Founder of the River Hill Economics Club and the River Hill
+              Engineering Club. Captain of Cross Country and member of Track &amp; Field.
+              Vice President of the Maryland Technology Honor Society (River Hill Chapter).
+              Section Leader in the River Hill Marching Band and Wind Ensemble.
+            </p>
+          </article>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <p>© <span id="year"></span> Lucas Chiang. Built as a portfolio site.</p>
+  </footer>
+
+<script src="script.js"></script>
+</body>
+</html>
