@@ -50,8 +50,8 @@
     });
 
     document.title = id === 'home'
-      ? '[Your Name] — Portfolio'
-      : `${capitalize(id)} — [Your Name]`;
+      ? 'Lucas Chiang — Portfolio'
+      : `${capitalize(id)} — Lucas Chiang`;
   }
 
   function capitalize(str) {
