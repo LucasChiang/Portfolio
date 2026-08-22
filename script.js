@@ -74,12 +74,34 @@
     });
 
     document.title = id === 'home'
-      ? '[Your Name] — Portfolio'
-      : `${capitalize(id)} — [Your Name]`;
+      ? 'Lucas - Portfolio'
+      : `${capitalize(id)} - Lucas`;
   }
 
   function capitalize(str) {
     return str.charAt(0).toUpperCase() + str.slice(1);
+  }
+
+  // ---------- Interactive timeline scroll reveal ----------
+  const epochs = Array.from(document.querySelectorAll('.epoch'));
+
+  if (epochs.length) {
+    if ('IntersectionObserver' in window) {
+      const epochObserver = new IntersectionObserver(
+        (entries) => {
+          entries.forEach((entry) => {
+            if (entry.isIntersecting) {
+              entry.target.classList.add('is-visible');
+              epochObserver.unobserve(entry.target);
+            }
+          });
+        },
+        { threshold: 0.2, rootMargin: '0px 0px -10% 0px' }
+      );
+      epochs.forEach((el) => epochObserver.observe(el));
+    } else {
+      epochs.forEach((el) => el.classList.add('is-visible'));
+    }
   }
 
   navLinks.forEach((a) => {
