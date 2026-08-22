@@ -13,6 +13,17 @@
   --font-mono: "IBM Plex Mono", monospace;
 }
 
+[data-theme="dark"] {
+  --paper: #14130F;
+  --paper-dim: #1E1C16;
+  --ink: #F0ECE3;
+  --ink-soft: #B9B3A4;
+  --accent: #C9A66B;
+  --line: #38352C;
+  --panel: #F0ECE3;
+  --panel-text: #16150F;
+}
+
 * { box-sizing: border-box; }
 
 @media (prefers-reduced-motion: reduce) {
@@ -30,6 +41,7 @@ body {
   color: var(--ink);
   font-family: var(--font-body);
   line-height: 1.6;
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 a { color: inherit; }
@@ -87,6 +99,28 @@ button:focus-visible {
 }
 
 .topbar-spacer { flex: 1; }
+
+.theme-toggle {
+  width: 38px;
+  height: 38px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: 1px solid var(--line);
+  border-radius: 3px;
+  cursor: pointer;
+  font-size: 1rem;
+  line-height: 1;
+  color: var(--ink);
+  padding: 0;
+  transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+}
+
+.theme-toggle:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
 
 /* ---------- Nav panel (card catalog drawer) ---------- */
 .nav-overlay {

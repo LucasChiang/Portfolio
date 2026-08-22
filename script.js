@@ -5,8 +5,32 @@
   const navLinks = Array.from(document.querySelectorAll('.nav-list a'));
   const pages = Array.from(document.querySelectorAll('.page'));
   const yearEl = document.getElementById('year');
+  const themeToggle = document.getElementById('themeToggle');
 
   const pageIds = pages.map((p) => p.dataset.page);
+
+  // ---------- Theme (light / dark) ----------
+  function applyTheme(theme) {
+    document.documentElement.setAttribute('data-theme', theme);
+    localStorage.setItem('theme', theme);
+    if (themeToggle) {
+      themeToggle.textContent = theme === 'dark' ? '☀' : '☾';
+      themeToggle.setAttribute(
+        'aria-label',
+        theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'
+      );
+    }
+  }
+
+  if (themeToggle) {
+    const current = document.documentElement.getAttribute('data-theme') || 'light';
+    applyTheme(current);
+
+    themeToggle.addEventListener('click', () => {
+      const now = document.documentElement.getAttribute('data-theme');
+      applyTheme(now === 'dark' ? 'light' : 'dark');
+    });
+  }
 
   function openNav() {
     navPanel.classList.add('is-open');
@@ -50,8 +74,8 @@
     });
 
     document.title = id === 'home'
-      ? 'Lucas Chiang — Portfolio'
-      : `${capitalize(id)} — Lucas Chiang`;
+      ? '[Your Name] — Portfolio'
+      : `${capitalize(id)} — [Your Name]`;
   }
 
   function capitalize(str) {

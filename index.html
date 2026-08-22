@@ -1,10 +1,17 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+<script>
+  (function () {
+    var stored = localStorage.getItem('theme');
+    var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    document.documentElement.setAttribute('data-theme', stored || (prefersDark ? 'dark' : 'light'));
+  })();
+</script>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Lucas Chiang — Portfolio</title>
-<link rel="icon" type="image/svg+xml" href="assets/favicon (1).svg">
+<link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,500&family=IBM+Plex+Mono:wght@400;500&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
@@ -21,6 +28,7 @@
     </button>
     <span class="topbar-title">Lucas Chiang</span>
     <span class="topbar-spacer" aria-hidden="true"></span>
+    <button class="theme-toggle" id="themeToggle" aria-label="Toggle dark mode">☾</button>
   </header>
 
   <!-- Slide-in nav panel, styled like a catalog index -->
@@ -57,8 +65,8 @@
           </p>
         </div>
         <figure class="photo-placeholder">
-          <img src="assets/DSC_4863.jpg" alt="Lucas Chiang" class="photo-box photo-img">
-          <figcaption>Lucas Chiang</figcaption>
+          <div class="photo-box"></div>
+          <figcaption>Photo placeholder</figcaption>
         </figure>
       </div>
     </section>
@@ -73,7 +81,8 @@
         <div class="entry-grid">
           <article class="entry">
             <figure class="photo-placeholder">
-              <img src="assets/Thermoelectric.jpg" class="photo-box photo-img">
+              <div class="photo-box"></div>
+              <figcaption>Photo placeholder</figcaption>
             </figure>
             <h2>Wearable Thermoelectric Power Systems</h2>
             <p class="entry-meta">University of Maryland Baltimore County — Jul 2025 to Present</p>
@@ -112,7 +121,8 @@
 
           <article class="entry">
             <figure class="photo-placeholder">
-              <img src="assets/20201218_image2_lg.jpg" class="photo-box photo-img">
+              <div class="photo-box"></div>
+              <figcaption>Photo placeholder</figcaption>
             </figure>
             <h2>Exoplanet Light Curve Validation (TOI 5868.01)</h2>
             <p class="entry-meta">George Mason University — Jun 2024 to Aug 2024</p>
@@ -254,7 +264,8 @@
         <p class="eyebrow">Section 04</p>
         <h1>Skills</h1>
         <figure class="photo-placeholder">
-          <img src="assets/EE Circuit Experiment.jpg" class="photo-box photo-img">
+          <div class="photo-box"></div>
+          <figcaption>Photo placeholder</figcaption>
         </figure>
 
         <div class="tag-grid">
