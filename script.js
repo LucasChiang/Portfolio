@@ -76,6 +76,10 @@
     document.title = id === 'home'
       ? 'Lucas - Portfolio'
       : `${capitalize(id)} - Lucas`;
+
+    if (id === 'timeline') {
+      requestAnimationFrame(() => requestAnimationFrame(drawEpochZigzag));
+    }
   }
 
   function capitalize(str) {
@@ -103,6 +107,40 @@
       epochs.forEach((el) => el.classList.add('is-visible'));
     }
   }
+
+  // ---------- Zigzag path connecting the timeline dots ----------
+  const epochTimeline = document.querySelector('.epoch-timeline');
+  const epochPathSvg = document.querySelector('.epoch-path');
+  const epochPathEl = document.getElementById('epochZigzag');
+
+  function drawEpochZigzag() {
+    if (!epochTimeline || !epochPathSvg || !epochPathEl || !epochs.length) return;
+    if (window.innerWidth <= 760) return; // path is hidden on mobile via CSS
+
+    const width = epochTimeline.clientWidth;
+    const height = epochTimeline.scrollHeight;
+    if (!width || !height) return;
+
+    epochPathSvg.setAttribute('viewBox', `0 0 ${width} ${height}`);
+    epochPathSvg.setAttribute('width', width);
+    epochPathSvg.setAttribute('height', height);
+
+    const points = epochs.map((el, i) => {
+      const x = i % 2 === 0 ? width * 0.34 : width * 0.66;
+      const y = el.offsetTop + el.offsetHeight / 2;
+      return `${x},${y}`;
+    });
+
+    epochPathEl.setAttribute('d', `M ${points.join(' L ')}`);
+  }
+
+  drawEpochZigzag();
+
+  let resizeTimer;
+  window.addEventListener('resize', () => {
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(drawEpochZigzag, 150);
+  });
 
   navLinks.forEach((a) => {
     a.addEventListener('click', () => {
