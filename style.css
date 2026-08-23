@@ -535,7 +535,7 @@ h2 {
   display: flex;
   align-items: stretch;
   gap: 96px;
-  height: clamp(900px, 84vh, 1020px);
+  height: clamp(680px, 74vh, 820px);
   width: max-content;
   padding: 0 clamp(40px, 10vw, 150px);
 }
