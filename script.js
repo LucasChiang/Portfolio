@@ -101,20 +101,32 @@
     }
   }
 
-  // ---------- Interactive timeline: let mouse-wheel scroll horizontally ----------
+  // Note: horizontal scrolling on the timeline works natively via trackpad
+  // swipe, shift+scroll, or the scrollbar. Click-and-drag is added below as
+  // a mouse-friendly option — normal page scrolling is never intercepted.
   const htlScroll = document.querySelector('.htl-scroll');
 
   if (htlScroll) {
-    htlScroll.addEventListener(
-      'wheel',
-      (e) => {
-        if (Math.abs(e.deltaY) > Math.abs(e.deltaX)) {
-          htlScroll.scrollLeft += e.deltaY;
-          e.preventDefault();
-        }
-      },
-      { passive: false }
-    );
+    let isDragging = false;
+    let dragStartX = 0;
+    let dragStartScroll = 0;
+
+    htlScroll.addEventListener('mousedown', (e) => {
+      isDragging = true;
+      htlScroll.classList.add('is-dragging');
+      dragStartX = e.pageX;
+      dragStartScroll = htlScroll.scrollLeft;
+    });
+
+    window.addEventListener('mouseup', () => {
+      isDragging = false;
+      htlScroll.classList.remove('is-dragging');
+    });
+
+    window.addEventListener('mousemove', (e) => {
+      if (!isDragging) return;
+      htlScroll.scrollLeft = dragStartScroll - (e.pageX - dragStartX);
+    });
   }
 
   navLinks.forEach((a) => {

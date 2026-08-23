@@ -524,10 +524,15 @@ h2 {
 .htl-scroll {
   overflow-x: auto;
   overflow-y: hidden;
-  scroll-snap-type: x proximity;
   padding: 40px 0;
   scrollbar-color: var(--accent) transparent;
   scrollbar-width: thin;
+  cursor: grab;
+}
+
+.htl-scroll.is-dragging {
+  cursor: grabbing;
+  user-select: none;
 }
 
 .htl-track {
@@ -563,7 +568,6 @@ h2 {
   flex: 0 0 auto;
   width: clamp(320px, 36vw, 440px);
   height: 100%;
-  scroll-snap-align: center;
 }
 
 .htl-dot {
