@@ -490,7 +490,7 @@ h2 {
 }
 
 /* ---------- Interactive timeline (horizontal, alternating) ---------- */
-.htl-scroll {
+.htl-wrap {
   position: relative;
   width: 100vw;
   left: 50%;
@@ -498,16 +498,10 @@ h2 {
   margin-left: -50vw;
   margin-right: -50vw;
   margin-top: 32px;
-  overflow-x: auto;
-  overflow-y: hidden;
-  scroll-snap-type: x proximity;
-  padding: 40px 0;
-  scrollbar-color: var(--accent) transparent;
-  scrollbar-width: thin;
 }
 
-.htl-scroll::before,
-.htl-scroll::after {
+.htl-wrap::before,
+.htl-wrap::after {
   content: '';
   position: absolute;
   top: 0;
@@ -517,14 +511,23 @@ h2 {
   pointer-events: none;
 }
 
-.htl-scroll::before {
+.htl-wrap::before {
   left: 0;
   background: linear-gradient(to right, var(--paper), transparent);
 }
 
-.htl-scroll::after {
+.htl-wrap::after {
   right: 0;
   background: linear-gradient(to left, var(--paper), transparent);
+}
+
+.htl-scroll {
+  overflow-x: auto;
+  overflow-y: hidden;
+  scroll-snap-type: x proximity;
+  padding: 40px 0;
+  scrollbar-color: var(--accent) transparent;
+  scrollbar-width: thin;
 }
 
 .htl-track {
@@ -673,8 +676,8 @@ h2 {
     transform: none !important;
     opacity: 1 !important;
   }
-  .htl-scroll::before,
-  .htl-scroll::after { display: none; }
+  .htl-wrap::before,
+  .htl-wrap::after { display: none; }
 
   .stat-row { grid-template-columns: repeat(2, 1fr); gap: 28px 20px; }
   .page-num-bg { font-size: clamp(6rem, 26vw, 9rem); }
