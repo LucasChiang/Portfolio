@@ -82,7 +82,7 @@
     return str.charAt(0).toUpperCase() + str.slice(1);
   }
 
-  // ---------- Interactive timeline: reveal on scroll ----------
+  // ---------- Interactive timeline: reveal on scroll, hide when off-screen ----------
   const htlItems = Array.from(document.querySelectorAll('.htl-item'));
 
   if (htlItems.length) {
@@ -90,13 +90,10 @@
       const htlObserver = new IntersectionObserver(
         (entries) => {
           entries.forEach((entry) => {
-            if (entry.isIntersecting) {
-              entry.target.classList.add('is-visible');
-              htlObserver.unobserve(entry.target);
-            }
+            entry.target.classList.toggle('is-visible', entry.isIntersecting);
           });
         },
-        { threshold: 0.35 }
+        { threshold: 0.3 }
       );
       htlItems.forEach((el) => htlObserver.observe(el));
     } else {
