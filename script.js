@@ -104,19 +104,40 @@
   // ---------- Interactive timeline: let mouse-wheel scroll horizontally ----------
   const htlScroll = document.querySelector('.htl-scroll');
 
+  const htlScroll = document.querySelector('.htl-scroll');
+
   if (htlScroll) {
+    let htlTarget = htlScroll.scrollLeft;
+    let htlAnimating = false;
+
+    function htlSmoothStep() {
+      const current = htlScroll.scrollLeft;
+      const diff = htlTarget - current;
+      if (Math.abs(diff) < 0.5) {
+        htlScroll.scrollLeft = htlTarget;
+        htlAnimating = false;
+        return;
+      }
+      htlScroll.scrollLeft = current + diff * 0.15;
+      requestAnimationFrame(htlSmoothStep);
+    }
+
     htlScroll.addEventListener(
       'wheel',
       (e) => {
         if (Math.abs(e.deltaY) > Math.abs(e.deltaX)) {
-          htlScroll.scrollLeft += e.deltaY;
+          const max = htlScroll.scrollWidth - htlScroll.clientWidth;
+          htlTarget = Math.max(0, Math.min(htlTarget + e.deltaY, max));
           e.preventDefault();
+          if (!htlAnimating) {
+            htlAnimating = true;
+            requestAnimationFrame(htlSmoothStep);
+          }
         }
       },
       { passive: false }
     );
   }
-
   navLinks.forEach((a) => {
     a.addEventListener('click', () => {
       closeNav();
