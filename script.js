@@ -76,71 +76,49 @@
     document.title = id === 'home'
       ? 'Lucas - Portfolio'
       : `${capitalize(id)} - Lucas`;
-
-    if (id === 'timeline') {
-      requestAnimationFrame(() => requestAnimationFrame(drawEpochZigzag));
-    }
   }
 
   function capitalize(str) {
     return str.charAt(0).toUpperCase() + str.slice(1);
   }
 
-  // ---------- Interactive timeline scroll reveal ----------
-  const epochs = Array.from(document.querySelectorAll('.epoch'));
+  // ---------- Interactive timeline: reveal on scroll ----------
+  const htlItems = Array.from(document.querySelectorAll('.htl-item'));
 
-  if (epochs.length) {
+  if (htlItems.length) {
     if ('IntersectionObserver' in window) {
-      const epochObserver = new IntersectionObserver(
+      const htlObserver = new IntersectionObserver(
         (entries) => {
           entries.forEach((entry) => {
             if (entry.isIntersecting) {
               entry.target.classList.add('is-visible');
-              epochObserver.unobserve(entry.target);
+              htlObserver.unobserve(entry.target);
             }
           });
         },
-        { threshold: 0.2, rootMargin: '0px 0px -10% 0px' }
+        { threshold: 0.35 }
       );
-      epochs.forEach((el) => epochObserver.observe(el));
+      htlItems.forEach((el) => htlObserver.observe(el));
     } else {
-      epochs.forEach((el) => el.classList.add('is-visible'));
+      htlItems.forEach((el) => el.classList.add('is-visible'));
     }
   }
 
-  // ---------- Zigzag path connecting the timeline dots ----------
-  const epochTimeline = document.querySelector('.epoch-timeline');
-  const epochPathSvg = document.querySelector('.epoch-path');
-  const epochPathEl = document.getElementById('epochZigzag');
+  // ---------- Interactive timeline: let mouse-wheel scroll horizontally ----------
+  const htlScroll = document.querySelector('.htl-scroll');
 
-  function drawEpochZigzag() {
-    if (!epochTimeline || !epochPathSvg || !epochPathEl || !epochs.length) return;
-    if (window.innerWidth <= 760) return; // path is hidden on mobile via CSS
-
-    const width = epochTimeline.clientWidth;
-    const height = epochTimeline.scrollHeight;
-    if (!width || !height) return;
-
-    epochPathSvg.setAttribute('viewBox', `0 0 ${width} ${height}`);
-    epochPathSvg.setAttribute('width', width);
-    epochPathSvg.setAttribute('height', height);
-
-    const points = epochs.map((el, i) => {
-      const x = i % 2 === 0 ? width * 0.34 : width * 0.66;
-      const y = el.offsetTop + el.offsetHeight / 2;
-      return `${x},${y}`;
-    });
-
-    epochPathEl.setAttribute('d', `M ${points.join(' L ')}`);
+  if (htlScroll) {
+    htlScroll.addEventListener(
+      'wheel',
+      (e) => {
+        if (Math.abs(e.deltaY) > Math.abs(e.deltaX)) {
+          htlScroll.scrollLeft += e.deltaY;
+          e.preventDefault();
+        }
+      },
+      { passive: false }
+    );
   }
-
-  drawEpochZigzag();
-
-  let resizeTimer;
-  window.addEventListener('resize', () => {
-    clearTimeout(resizeTimer);
-    resizeTimer = setTimeout(drawEpochZigzag, 150);
-  });
 
   navLinks.forEach((a) => {
     a.addEventListener('click', () => {

@@ -489,63 +489,63 @@ h2 {
   text-decoration: underline;
 }
 
-/* ---------- Interactive timeline (scroll-triggered, full-bleed) ---------- */
-.epoch-timeline {
+/* ---------- Interactive timeline (horizontal, alternating) ---------- */
+.htl-scroll {
   position: relative;
   width: 100vw;
   left: 50%;
   right: 50%;
   margin-left: -50vw;
   margin-right: -50vw;
-  margin-top: 20px;
+  margin-top: 32px;
+  overflow-x: auto;
+  overflow-y: visible;
+  scroll-snap-type: x proximity;
+  padding-bottom: 24px;
+  scrollbar-color: var(--accent) transparent;
+  scrollbar-width: thin;
 }
 
-.epoch-path {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  z-index: 0;
-  pointer-events: none;
-}
-
-.epoch-path path {
-  fill: none;
-  stroke: var(--line);
-  stroke-width: 2;
-  stroke-dasharray: 6 10;
-  stroke-linecap: round;
-}
-
-.epoch {
+.htl-track {
   position: relative;
-  z-index: 1;
   display: flex;
-  align-items: center;
-  gap: 56px;
-  min-height: 78vh;
-  padding: 72px clamp(24px, 6vw, 96px);
-  border-top: 1px solid var(--line);
-  opacity: 0;
-  transform: translateY(48px);
-  transition: opacity 0.8s ease, transform 0.8s ease, background-color 0.3s ease;
+  align-items: stretch;
+  gap: 64px;
+  height: 560px;
+  width: max-content;
+  padding: 0 clamp(24px, 8vw, 120px);
 }
 
-.epoch.is-visible {
-  opacity: 1;
-  transform: translateY(0);
-}
-
-.epoch:nth-child(even) {
-  flex-direction: row-reverse;
-  background: var(--paper-dim);
-}
-
-.epoch-point {
+.htl-track::before {
+  content: '';
   position: absolute;
   top: 50%;
-  left: 34%;
+  left: 0;
+  right: 0;
+  height: 2px;
+  transform: translateY(-1px);
+  background-image: repeating-linear-gradient(
+    to right,
+    var(--line) 0,
+    var(--line) 8px,
+    transparent 8px,
+    transparent 18px
+  );
+  z-index: 0;
+}
+
+.htl-item {
+  position: relative;
+  flex: 0 0 auto;
+  width: clamp(260px, 30vw, 340px);
+  height: 100%;
+  scroll-snap-align: center;
+}
+
+.htl-dot {
+  position: absolute;
+  top: 50%;
+  left: 50%;
   transform: translate(-50%, -50%) scale(0);
   width: 20px;
   height: 20px;
@@ -554,29 +554,52 @@ h2 {
   border: 4px solid var(--paper);
   box-shadow: 0 0 0 2px var(--line);
   z-index: 2;
-  transition: transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) 0.2s, left 0.3s ease;
+  transition: transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) 0.15s;
 }
 
-.epoch:nth-child(even) .epoch-point { left: 66%; border-color: var(--paper-dim); }
+.htl-item.is-visible .htl-dot { transform: translate(-50%, -50%) scale(1); }
 
-.epoch.is-visible .epoch-point { transform: translate(-50%, -50%) scale(1); }
-
-.epoch-media {
-  flex: 0 0 300px;
-  max-width: 300px;
-  position: relative;
-}
-
-.epoch-media .photo-box {
-  aspect-ratio: 1 / 1;
-}
-
-.epoch-icon {
+.htl-stem {
   position: absolute;
-  inset: 0;
-  margin: auto;
-  width: 124px;
-  height: 124px;
+  left: 50%;
+  width: 2px;
+  height: 22px;
+  background: var(--line);
+  transform: translateX(-50%);
+  z-index: 1;
+}
+
+.htl-above .htl-stem { bottom: 50%; }
+.htl-below .htl-stem { top: 50%; }
+
+.htl-card {
+  position: absolute;
+  left: 50%;
+  width: 100%;
+  transform: translateX(-50%);
+  opacity: 0;
+  transition: opacity 0.6s ease 0.1s, transform 0.6s ease 0.1s;
+}
+
+.htl-above .htl-card {
+  bottom: calc(50% + 22px);
+  transform: translateX(-50%) translateY(12px);
+}
+
+.htl-below .htl-card {
+  top: calc(50% + 22px);
+  transform: translateX(-50%) translateY(-12px);
+}
+
+.htl-item.is-visible .htl-card {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+.htl-icon {
+  width: 84px;
+  height: 84px;
+  margin: 0 0 14px;
   border-radius: 50%;
   background: var(--paper-dim);
   border: 1px solid var(--line);
@@ -584,52 +607,29 @@ h2 {
   align-items: center;
   justify-content: center;
   color: var(--accent);
-  transform: scale(0.5) rotate(-8deg);
-  opacity: 0;
-  transition: transform 0.7s cubic-bezier(0.34, 1.56, 0.64, 1) 0.15s,
-              opacity 0.5s ease 0.15s,
-              background-color 0.3s ease;
 }
 
-.epoch.is-visible .epoch-icon {
-  transform: scale(1) rotate(0deg);
-  opacity: 1;
-}
+.htl-below .htl-icon { margin: 0 0 14px; order: -1; }
 
-.epoch-icon:hover {
-  transform: scale(1.08) rotate(-5deg);
-  transition: transform 0.3s ease;
-}
+.htl-icon svg { width: 42px; height: 42px; }
 
-.epoch:nth-child(even) .epoch-icon { background: var(--paper); }
-
-.epoch-icon svg {
-  width: 64px;
-  height: 64px;
-}
-
-.epoch-content {
-  flex: 1;
-  max-width: 620px;
-}
-
-.epoch-date {
-  font-family: var(--font-mono);
-  font-size: clamp(2rem, 5vw, 3.2rem);
-  color: var(--accent);
-  margin: 0 0 6px;
-  letter-spacing: 0.02em;
-}
-
-.epoch-title {
+.htl-title {
   font-family: var(--font-display);
   font-weight: 500;
-  font-size: clamp(1.25rem, 2.6vw, 1.7rem);
+  font-size: 1.15rem;
   line-height: 1.25;
-  margin: 0 0 16px;
+  margin: 0 0 10px;
 }
 
-.epoch-content .body-copy { margin: 0; max-width: 56ch; }
+.htl-card .epoch-date {
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  color: var(--accent);
+  margin: 0 0 8px;
+  letter-spacing: 0.04em;
+}
+
+.htl-card .body-copy { margin: 0; max-width: 34ch; }
 
 /* ---------- Responsive ---------- */
 @media (max-width: 760px) {
@@ -638,19 +638,19 @@ h2 {
   .timeline-item { grid-template-columns: 1fr; }
   .timeline-item .photo-placeholder.small { max-width: 160px; }
 
-  .epoch,
-  .epoch:nth-child(even) {
-    flex-direction: column;
-    text-align: center;
-    min-height: 0;
-    gap: 24px;
-    padding: 48px 24px;
+  .htl-track { height: auto; gap: 40px; }
+  .htl-item {
+    width: 78vw;
+    height: auto;
   }
-
-  .epoch-media { max-width: 200px; margin: 0 auto; }
-  .epoch-content .body-copy { margin: 0 auto; }
-  .epoch-path,
-  .epoch-point { display: none; }
+  .htl-track::before { display: none; }
+  .htl-dot, .htl-stem { display: none; }
+  .htl-card {
+    position: static;
+    transform: none !important;
+    opacity: 1 !important;
+  }
+  .htl-below .htl-icon { order: 0; }
 
   .stat-row { grid-template-columns: repeat(2, 1fr); gap: 28px 20px; }
   .page-num-bg { font-size: clamp(6rem, 26vw, 9rem); }
