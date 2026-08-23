@@ -499,9 +499,9 @@ h2 {
   margin-right: -50vw;
   margin-top: 32px;
   overflow-x: auto;
-  overflow-y: visible;
+  overflow-y: hidden;
   scroll-snap-type: x proximity;
-  padding-bottom: 24px;
+  padding: 40px 0;
   scrollbar-color: var(--accent) transparent;
   scrollbar-width: thin;
 }
@@ -511,7 +511,7 @@ h2 {
   display: flex;
   align-items: stretch;
   gap: 64px;
-  height: 560px;
+  height: clamp(760px, 82vh, 920px);
   width: max-content;
   padding: 0 clamp(24px, 8vw, 120px);
 }
