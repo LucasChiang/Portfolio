@@ -686,3 +686,41 @@ h2 {
   .stat-row { grid-template-columns: repeat(2, 1fr); gap: 28px 20px; }
   .page-num-bg { font-size: clamp(6rem, 26vw, 9rem); }
 }
+
+
+/* ---------- "Let's have some fun" link ---------- */
+.fun-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 38px;
+  padding: 0 14px;
+  border: 1px solid var(--accent);
+  border-radius: 3px;
+  font-family: var(--font-display);
+  font-style: italic;
+  font-size: 0.95rem;
+  color: var(--accent);
+  text-decoration: none;
+  white-space: nowrap;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+.fun-link:hover,
+.fun-link:focus-visible {
+  background: var(--accent);
+  color: var(--paper);
+}
+.fun-link span { transition: transform 0.2s ease; }
+.fun-link:hover span { transform: translateX(3px); }
+.nav-list a.nav-fun .nav-label { font-style: italic; color: var(--accent); }
+@media (max-width: 480px) {
+  .fun-link { padding: 0 10px; font-size: 0.85rem; }
+}
+@media (max-width: 360px) {
+  .topbar-title { font-size: 0.9rem; }
+}
+
+@media (max-width: 480px) {
+  .topbar-title { white-space: nowrap; }
+  .topbar { gap: 10px; }
+}
