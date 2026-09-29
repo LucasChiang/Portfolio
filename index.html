@@ -85,6 +85,7 @@ p{margin:0 0 12px}
 .ibtn{all:unset;cursor:pointer;height:32px;min-width:32px;padding:0 8px;box-sizing:border-box;display:inline-flex;align-items:center;justify-content:center;gap:6px;
   border:1px solid var(--line);border-radius:4px;font:500 .78rem var(--mono);white-space:nowrap}
 .ibtn:hover{border-color:var(--via);color:var(--via)}
+.ibtn kbd.k{font:500 .66rem var(--mono);border:1px solid var(--line);border-radius:3px;padding:0 5px;color:var(--muted)}
 .ibtn:focus-visible{outline:2px solid var(--via);outline-offset:2px}
 nav.layers{display:flex;gap:2px;margin-left:auto;overflow-x:auto;scrollbar-width:none;min-width:0}
 nav.layers::-webkit-scrollbar{display:none}
@@ -278,6 +279,14 @@ h3{font-family:var(--body);font-weight:600;font-size:clamp(1.2rem,2vw,1.5rem);li
 :root .play-btn{color:#0c0e19}
 .game-cap{padding:12px 16px 16px;color:var(--muted);font-size:.92rem;margin:0}
 #aim canvas{cursor:none}
+.lvls{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;width:min(360px,100%);margin:0 auto}
+.lvl{all:unset;cursor:pointer;box-sizing:border-box;padding:10px 12px;border:1.5px solid var(--c);background:var(--panel);text-align:left;transition:background .15s,transform .15s}
+.lvl:hover{background:color-mix(in srgb,var(--c) 18%,var(--panel));transform:translateY(-2px)}
+.lvl:focus-visible{outline:2px solid var(--fg);outline-offset:2px}
+.lvl b{display:block;font:700 .82rem var(--display)}
+.lvl span{display:block;font:500 .68rem var(--mono);color:var(--muted);letter-spacing:.04em;margin-top:3px;text-transform:uppercase}
+.lvl:nth-child(1){--c:var(--diff)}.lvl:nth-child(2){--c:var(--m1)}.lvl:nth-child(3){--c:var(--m2)}.lvl:nth-child(4){--c:var(--poly)}
+@media (max-width:420px){.ovl .res{font-size:.72rem;margin-bottom:8px}.lvl{padding:7px 9px}.lvl span{display:none}}
 @media (max-width:860px){.games{grid-template-columns:1fr}}
 
 /* ================= FOOTER ================= */
@@ -298,6 +307,11 @@ footer{padding-block:clamp(56px,8vw,96px) 40px;overflow:hidden}
 @media (max-width:440px){.pads{grid-template-columns:1fr}}
 
 /* ================= TERMINAL ================= */
+#tip{position:fixed;left:16px;bottom:calc(16px + env(safe-area-inset-bottom,0px));z-index:50;background:var(--fg);color:var(--bg);font:500 .78rem var(--mono);padding:10px 14px;border-radius:4px;
+  box-shadow:0 10px 30px rgba(0,0,0,.25);animation:tipin .4s cubic-bezier(.2,.8,.2,1)}
+#tip kbd{font:700 .78rem var(--mono);background:var(--via);color:#14152a;padding:1px 7px;border-radius:3px;margin-right:4px}
+@keyframes tipin{from{transform:translateY(20px);opacity:0}}
+@media (pointer:coarse){#tip{display:none!important}}
 #term{position:fixed;left:0;right:0;bottom:0;z-index:60;height:min(56vh,460px);background:var(--term-bg);color:var(--term-fg);
   border-top:2px solid var(--term-hi);display:flex;flex-direction:column;font:500 .84rem/1.6 var(--mono);
   padding-bottom:env(safe-area-inset-bottom,0px);transform:translateY(105%);transition:transform .35s cubic-bezier(.2,.8,.2,1);box-shadow:0 -20px 60px rgba(0,0,0,.35)}
@@ -343,7 +357,7 @@ footer{padding-block:clamp(56px,8vw,96px) 40px;overflow:hidden}
   <div class="wrap">
     <a class="brand" href="#home">Lucas Chiang</a>
     <button class="ibtn" id="themeBtn" type="button" aria-label="Toggle light and dark theme">☾</button>
-    <button class="ibtn" id="termBtn" type="button" aria-label="Open terminal">&gt;_<span class="t">Terminal</span></button>
+    <button class="ibtn" id="termBtn" type="button" aria-label="Open terminal (backtick key)" title="Terminal · press ` (the key under Esc)">&gt;_<span class="t">Terminal</span><kbd class="k">`</kbd></button>
     <nav class="layers" aria-label="Sections">
       <a href="#home" style="--c:var(--via)"><span class="sw"></span><span class="num">01</span><span class="lbl">Home</span></a>
       <a href="#research" style="--c:var(--m1)"><span class="sw"></span><span class="num">02</span><span class="lbl"><span class="lbl-long">Research Projects</span><span class="lbl-short">Research</span></span></a>
@@ -579,9 +593,9 @@ footer{padding-block:clamp(56px,8vw,96px) 40px;overflow:hidden}
         <p class="game-cap">Drag back from the ball and release to shoot. The scoreboard is a 7-segment display, naturally.</p>
       </div>
       <div class="game" id="aim" style="--c:var(--poly)">
-        <div class="game-top"><h3>Aim Trainer</h3><span class="mono" id="aimStat">Best: —</span></div>
+        <div class="game-top"><h3>Aim Trainer</h3><span class="mono" id="aimStat">PCB · best —</span></div>
         <div class="stage"><canvas aria-label="Aim trainer. Click the solder pads as fast as you can."></canvas>
-          <div class="ovl" id="aimOvl"><div><div class="res" id="aimRes">20 solder pads. Hit each one before it fades.</div><button class="play-btn" id="aimGo" type="button">Start</button></div></div>
+          <div class="ovl" id="aimOvl"><div><div class="res" id="aimRes">Pick a level. Hit every solder pad before it fades.</div><div class="lvls" id="aimLvls"></div></div></div>
         </div>
         <p class="game-cap">Valorant is my FPS of choice. Here the targets are solder pads.</p>
       </div>
@@ -599,10 +613,11 @@ footer{padding-block:clamp(56px,8vw,96px) 40px;overflow:hidden}
       <a class="pad" href="https://linkedin.com/in/lucas-chiang-153822381" target="_blank" rel="noopener"><span class="mono"><span class="via"></span>LinkedIn</span><b>LinkedIn</b></a>
       <a class="pad" href="https://lucaschiang.com" target="_blank" rel="noopener"><span class="mono"><span class="via"></span>Web</span><b>lucaschiang.com</b></a>
     </div>
-    <div class="foot mono"><span>© <span id="yr"></span> Lucas Chiang. Built as a portfolio site.</span><span>Press <kbd>`</kbd> for the terminal</span></div>
+    <div class="foot mono"><span>© <span id="yr"></span> Lucas Chiang. Built as a portfolio site.</span><span>Press <kbd>`</kbd> (the key under Esc) for the terminal</span></div>
   </div>
 </footer>
 
+<div id="tip" hidden role="status"><kbd>`</kbd> opens the terminal · try <b>help</b></div>
 <!-- ============ TERMINAL ============ -->
 <div id="term" aria-hidden="true">
   <div class="term-bar"><span>lucas@purdue:~</span><button id="termClose" type="button">esc</button></div>
@@ -805,11 +820,12 @@ const Hero=(function(){
     if(boot.dataset.done)return;boot.dataset.done=1;store.sset('lc-booted','1');
     document.body.classList.remove('booting');
     boot.classList.add('off');setTimeout(()=>{boot.hidden=true},560);
-    setTimeout(()=>{Hero.start();$$('.pin b').forEach(b=>pio.observe(b))},220);
+    setTimeout(()=>{Hero.start();$$('.pin b').forEach(b=>pio.observe(b))},220);tip();
     document.removeEventListener('keydown',key);
   }
   function key(e){if(e.key==='Tab')return;finish()}
-  if(skip){Hero.start();$$('.pin b').forEach(b=>pio.observe(b));return}
+  function tip(){if(store.sget('lc-tip'))return;store.sset('lc-tip','1');const t=$('#tip');setTimeout(()=>{t.hidden=false;setTimeout(()=>{t.hidden=true},6000)},2600)}
+  if(skip){Hero.start();$$('.pin b').forEach(b=>pio.observe(b));tip();return}
   boot.hidden=false;document.body.classList.add('booting');
   const L=[['dim','POWER-ON SELF TEST'],['ok','[ OK ]',' VDD rail stable'],['ok','[ OK ]',' Clock tree locked'],
     ['ok','[ OK ]',' Research modules ............ 3'],['ok','[ OK ]',' Publications verified ....... 2'],
@@ -932,33 +948,48 @@ function seg7(c,d,x,y,s,on,off){// draw digit d at x,y with scale s (60x100 unit
   stat.textContent=`0 / 0 · best streak ${best}`;
 })();
 
-/* ---------- aim trainer ---------- */
+/* ---------- aim trainer (4 levels) ---------- */
 (function(){
-  const box=$('#aim'),cv=box.querySelector('canvas'),ovl=$('#aimOvl'),res=$('#aimRes'),go=$('#aimGo'),stat=$('#aimStat'),LW=800,LH=500,N=20,LIFE=1300;
-  let c=fitCanvas(cv,LW,LH),tg=null,times=[],hits=0,shots=0,count=0,run=false,mx=-99,my=-99,sparks=[],active=false;
-  let best=+(store.get('lc-aim-best')||0);if(best)stat.textContent=`Best: ${best} ms`;
-  function spawn(){if(count>=N){end();return}count++;tg={x:60+Math.random()*(LW-120),y:60+Math.random()*(LH-120),t:performance.now()}}
+  const box=$('#aim'),cv=box.querySelector('canvas'),ovl=$('#aimOvl'),res=$('#aimRes'),stat=$('#aimStat'),lvlBox=$('#aimLvls'),LW=800,LH=500;
+  const LV=[{name:'Breadboard',tag:'easy',n:15,life:1900,r:38,move:0},
+            {name:'PCB',tag:'medium',n:20,life:1300,r:30,move:0},
+            {name:'Silicon',tag:'hard',n:25,life:950,r:22,move:1.2},
+            {name:'Nanometer',tag:'insane',n:30,life:720,r:15,move:2.6}];
+  let L=LV[1],li=1,c=fitCanvas(cv,LW,LH),tg=null,times=[],hits=0,shots=0,count=0,run=false,mx=-99,my=-99,sparks=[],active=false,combo=0,maxCombo=0;
+  const bestOf=i=>+(store.get('lc-aim-best-'+i)||0);
+  function showStat(){const b=bestOf(li);stat.textContent=`${L.name} · best ${b?b+' ms':'—'}`}
+  lvlBox.innerHTML=LV.map((l,i)=>`<button type="button" class="lvl" data-l="${i}"><b>${l.name}</b><span>${l.tag} · ${l.n} pads</span></button>`).join('');
+  showStat();
+  function spawn(){if(count>=L.n){end();return}count++;const a=Math.random()*6.283;
+    tg={x:70+Math.random()*(LW-140),y:70+Math.random()*(LH-140),t:performance.now(),vx:Math.cos(a)*L.move,vy:Math.sin(a)*L.move}}
   function end(){run=false;tg=null;const avg=times.length?Math.round(times.reduce((a,b)=>a+b,0)/times.length):0,acc=shots?Math.round(hits/shots*100):0;
-    if(avg&&hits>=N/2&&(!best||avg<best)){best=avg;store.set('lc-aim-best',best);stat.textContent=`Best: ${best} ms`}
-    res.innerHTML=`<b>${avg?avg+' ms':'—'}</b>avg reaction · ${hits}/${N} pads · ${acc}% accuracy`;go.textContent='Again';ovl.hidden=false;go.focus({preventScroll:true})}
-  go.addEventListener('click',()=>{times=[];hits=0;shots=0;count=0;run=true;ovl.hidden=true;setTimeout(spawn,350)});
-  function r(now){if(!tg)return 0;const a=(now-tg.t)/LIFE;return a>=1?0:30*(a<.15?a/.15:1-(a-.15)*.55)}
+    let rec='';const b=bestOf(li);
+    if(avg&&hits>=L.n/2&&(!b||avg<b)){store.set('lc-aim-best-'+li,avg);rec=' · new best'}
+    showStat();
+    res.innerHTML=`<b>${avg?avg+' ms':'—'}</b>${L.name}: ${hits}/${L.n} pads · ${acc}% accuracy · best combo ${maxCombo}${rec}<br>Pick a level to play again.`;
+    ovl.hidden=false;const btn=lvlBox.querySelector(`[data-l="${li}"]`);btn&&btn.focus({preventScroll:true})}
+  lvlBox.addEventListener('click',e=>{const b=e.target.closest('.lvl');if(!b)return;li=+b.dataset.l;L=LV[li];showStat();
+    times=[];hits=0;shots=0;count=0;combo=0;maxCombo=0;run=true;ovl.hidden=true;setTimeout(spawn,400)});
+  function r(now){if(!tg)return 0;const a=(now-tg.t)/L.life;return a>=1?0:L.r*(a<.15?a/.15:1-(a-.15)*.55)}
   cv.addEventListener('pointermove',e=>{[mx,my]=toLogical(cv,e,LW,LH)});
   cv.addEventListener('pointerleave',()=>{mx=my=-99});
   cv.addEventListener('pointerdown',e=>{[mx,my]=toLogical(cv,e,LW,LH);if(!run||!tg)return;shots++;const now=performance.now(),rr=r(now);
-    if(Math.hypot(mx-tg.x,my-tg.y)<=Math.max(rr,14)+4){hits++;times.push(Math.round(now-tg.t));
+    if(Math.hypot(mx-tg.x,my-tg.y)<=Math.max(rr,L.r*.45)+4){hits++;combo++;maxCombo=Math.max(maxCombo,combo);times.push(Math.round(now-tg.t));
       for(let i=0;i<14;i++){const a=Math.random()*6.283,s=2+Math.random()*4;sparks.push({x:tg.x,y:tg.y,vx:Math.cos(a)*s,vy:Math.sin(a)*s,l:1})}
-      tg=null;setTimeout(spawn,180+Math.random()*320)}});
+      tg=null;setTimeout(spawn,160+Math.random()*300)}else combo=0});
   function draw(now){
     c.clearRect(0,0,LW,LH);
     c.strokeStyle=col.line;c.lineWidth=1;for(let x=0;x<=LW;x+=40){c.beginPath();c.moveTo(x,0);c.lineTo(x,LH);c.stroke()}for(let y=0;y<=LH;y+=40){c.beginPath();c.moveTo(0,y);c.lineTo(LW,y);c.stroke()}
-    if(tg){const rr=r(now);if(rr<=0&&now-tg.t>LIFE){tg=null;setTimeout(spawn,120)}else{
+    if(tg){if(tg.vx||tg.vy){tg.x+=tg.vx;tg.y+=tg.vy;if(tg.x<50||tg.x>LW-50)tg.vx*=-1;if(tg.y<50||tg.y>LH-50)tg.vy*=-1}
+      const rr=r(now);if(rr<=0&&now-tg.t>L.life){tg=null;combo=0;setTimeout(spawn,120)}else{
       c.fillStyle=col.via;c.beginPath();c.arc(tg.x,tg.y,rr,0,6.283);c.fill();
       c.fillStyle=col.bg;c.beginPath();c.arc(tg.x,tg.y,rr*.38,0,6.283);c.fill();
-      c.strokeStyle=col.poly;c.lineWidth=2;c.beginPath();c.arc(tg.x,tg.y,rr+6,-Math.PI/2,-Math.PI/2+6.283*(1-(now-tg.t)/LIFE));c.stroke()}}
+      c.strokeStyle=col.poly;c.lineWidth=2;c.beginPath();c.arc(tg.x,tg.y,rr+6,-Math.PI/2,-Math.PI/2+6.283*(1-(now-tg.t)/L.life));c.stroke()}}
     for(const s of sparks){s.x+=s.vx;s.y+=s.vy;s.vx*=.9;s.vy*=.9;s.l-=.04;c.globalAlpha=Math.max(0,s.l);c.fillStyle=col.via;c.fillRect(s.x-2,s.y-2,4,4)}
     c.globalAlpha=1;sparks=sparks.filter(s=>s.l>0);
-    if(run){c.fillStyle=col.muted;c.font='500 14px JetBrains Mono, monospace';c.fillText(`PAD ${String(count).padStart(2,'0')}/${N}   HITS ${hits}`,16,26)}
+    if(run){c.fillStyle=col.muted;c.font='500 14px JetBrains Mono, monospace';
+      c.fillText(`${L.name.toUpperCase()}   PAD ${String(count).padStart(2,'0')}/${L.n}   HITS ${hits}`,16,26);
+      if(combo>=3){c.fillStyle=col.diff;c.fillText(`COMBO x${combo}`,LW-120,26)}}
     if(mx>0){c.strokeStyle=col.diff;c.lineWidth=2;const g=5,l=9;
       c.beginPath();c.moveTo(mx-g-l,my);c.lineTo(mx-g,my);c.moveTo(mx+g,my);c.lineTo(mx+g+l,my);c.moveTo(mx,my-g-l);c.lineTo(mx,my-g);c.moveTo(mx,my+g);c.lineTo(mx,my+g+l);c.stroke();
       c.fillStyle=col.diff;c.fillRect(mx-1.5,my-1.5,3,3)}
@@ -977,7 +1008,7 @@ function seg7(c,d,x,y,s,on,off){// draw digit d at x,y with scale s (60x100 unit
   const secs={home:'home',research:'research',experience:'experience',skills:'skills',timeline:'timeline',play:'play'};
   const go=id=>{close();document.getElementById(id).scrollIntoView({behavior:reduce?'auto':'smooth'})};
   const C={
-    help:()=>print('commands: <span class="p">whoami  education  research  experience  skills  timeline  contact  resume  play  ls  cd &lt;section&gt;  theme  clear  exit</span>'),
+    help:()=>print('commands: <span class="p">whoami  education  research  experience  skills  timeline  contact  resume  play  aim  hoops  ls  cd &lt;section&gt;  theme  clear  exit</span>'),
     whoami:()=>print(esc(txt($('.lede'))+'\n\n'+txt($('.bio')))),
     education:()=>print(esc($$('.edu p').map(txt).join('\n\n'))),
     research:()=>print($$('#research .proj').map(p=>'<span class="p">▸ '+esc(txt(p.querySelector('h3')))+'</span>\n  <span class="d">'+esc(txt(p.querySelector('.meta')))+'</span>').join('\n')),
@@ -987,6 +1018,8 @@ function seg7(c,d,x,y,s,on,off){// draw digit d at x,y with scale s (60x100 unit
     contact:()=>print($$('.pad').map(p=>esc(txt(p.querySelector('.mono')).padEnd(9))+'<a href="'+p.getAttribute('href')+'" target="_blank" rel="noopener">'+esc(txt(p.querySelector('b')))+'</a>').join('\n')),
     resume:()=>print('<a href="assets/resume.pdf" target="_blank" rel="noopener">open resume.pdf ↗</a>'),
     play:()=>go('play'),
+    aim:()=>{go('play');setTimeout(()=>{const b=$('#aimLvls .lvl');b&&b.focus({preventScroll:true})},500)},
+    hoops:()=>go('play'),
     ls:()=>print(Object.keys(secs).map(s=>s+'/').join('  ')),
     cd:a=>{const s=(a||'').replace(/\/$/,'');if(secs[s])go(secs[s]);else print('cd: no such section: '+esc(a||''),'d')},
     theme:()=>{const b=themeBtn.getBoundingClientRect();setTheme(isDark()?'light':'dark',b.left+b.width/2,b.top+b.height/2);print('theme → '+(isDark()?'light':'dark'),'d')},
@@ -994,14 +1027,14 @@ function seg7(c,d,x,y,s,on,off){// draw digit d at x,y with scale s (60x100 unit
     exit:()=>close(),
     sudo:()=>print('permission denied: tape-out needs sign-off','d')
   };
-  function open(){term.classList.add('open');term.setAttribute('aria-hidden','false');if(!out.childElementCount){print('LC shell · type <span class="p">help</span> to list commands','d')}setTimeout(()=>inp.focus(),60)}
+  function open(){$('#tip').hidden=true;term.classList.add('open');term.setAttribute('aria-hidden','false');if(!out.childElementCount){print('LC shell · type <span class="p">help</span> to list commands','d')}setTimeout(()=>inp.focus(),60)}
   function close(){term.classList.remove('open');term.setAttribute('aria-hidden','true');inp.blur()}
   $('#termBtn').addEventListener('click',()=>term.classList.contains('open')?close():open());
   $('#termClose').addEventListener('click',close);
   document.addEventListener('keydown',e=>{
     if($('#boot')&&!$('#boot').hidden&&!$('#boot').dataset.done)return;
     const typing=/INPUT|TEXTAREA/.test(document.activeElement.tagName)&&document.activeElement!==inp;
-    if(e.key==='`'&&!typing){e.preventDefault();term.classList.contains('open')?close():open()}
+    if((e.key==='`'||e.key==='~'||e.code==='Backquote')&&!typing&&!e.metaKey&&!e.ctrlKey&&!e.altKey){e.preventDefault();term.classList.contains('open')?close():open()}
     else if(e.key==='Escape'&&term.classList.contains('open'))close();
   });
   $('#termForm').addEventListener('submit',e=>{e.preventDefault();const v=inp.value.trim();inp.value='';if(!v)return;hist.push(v);hi=hist.length;
