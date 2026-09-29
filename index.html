@@ -1,532 +1,565 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-<script>
-  (function () {
-    var stored = localStorage.getItem('theme');
-    var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-    document.documentElement.setAttribute('data-theme', stored || (prefersDark ? 'dark' : 'light'));
-  })();
-</script>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Lucas Chiang — Portfolio</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="description" content="Lucas Chiang — Electrical Engineering student at Purdue University. Research in wearable thermoelectrics, thin films, exoplanet validation, and chip design.">
+<title>Lucas Chiang — Portfolio</title>
 <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
+<script>try{var t=localStorage.getItem('lc-theme');if(t)document.documentElement.setAttribute('data-theme',t)}catch(e){}</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,500&family=IBM+Plex+Mono:wght@400;500&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Unbounded:wght@500;700;800&family=Figtree:ital,wght@0,400;0,500;0,600;1,400&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* Layout concept: the site is a chip layout viewer. Each section is a mask layer
+   (metal 1, metal 2, poly, diffusion, via) with its own color and hatch; the hero is a live routed die. */
+:root{
+  --bg:#f2f2f6; --panel:#ffffff; --fg:#14152a; --muted:#5d5e78; --line:#d9d9e4; --grid:rgba(20,21,42,.05);
+  --m1:#2a5fe0; --m2:#b02fd6; --poly:#e0383e; --diff:#0f9a64; --via:#b98500;
+  --display:"Unbounded","Arial Black",system-ui,sans-serif;
+  --body:"Figtree",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --mono:"JetBrains Mono",ui-monospace,"SFMono-Regular",Menlo,monospace;
+  --gutter:clamp(16px,4vw,48px); --max:1240px;
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+  --bg:#0c0e19; --panel:#121528; --fg:#e8e7f2; --muted:#9091ad; --line:#252943; --grid:rgba(232,231,242,.04);
+  --m1:#5b8cff; --m2:#d77bff; --poly:#ff6b6f; --diff:#3fdc9c; --via:#ffcf4d; color-scheme:dark;
+}}
+:root[data-theme="dark"]{
+  --bg:#0c0e19; --panel:#121528; --fg:#e8e7f2; --muted:#9091ad; --line:#252943; --grid:rgba(232,231,242,.04);
+  --m1:#5b8cff; --m2:#d77bff; --poly:#ff6b6f; --diff:#3fdc9c; --via:#ffcf4d; color-scheme:dark;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:72px}
+@media (prefers-reduced-motion: reduce){html{scroll-behavior:auto}}
+body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.65 var(--body);
+  background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);
+  background-size:22px 22px;-webkit-font-smoothing:antialiased}
+img{max-width:100%;display:block}
+a{color:inherit}
+:focus-visible{outline:2px solid var(--via);outline-offset:3px}
+.wrap{max-width:var(--max);margin:0 auto;padding-inline:var(--gutter)}
+.mono{font-family:var(--mono);font-size:.78rem;letter-spacing:.04em}
+h1,h2,h3{text-wrap:balance;margin:0}
+
+/* ---------- top bar ---------- */
+.bar{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:color-mix(in srgb,var(--bg) 86%,transparent);
+  backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+.bar .wrap{display:flex;align-items:center;gap:20px;height:60px}
+.brand{font-family:var(--display);font-weight:700;font-size:.95rem;text-decoration:none;white-space:nowrap;display:flex;align-items:center;gap:10px}
+.theme{all:unset;cursor:pointer;font-size:1.05rem;width:32px;height:32px;display:grid;place-items:center;border:1px solid var(--line);border-radius:4px}
+.theme:hover{border-color:var(--via);color:var(--via)}
+.theme:focus-visible{outline:2px solid var(--via)}
+nav.layers{display:flex;gap:4px;margin-left:auto;overflow-x:auto;scrollbar-width:none;min-width:0}
+nav.layers::-webkit-scrollbar{display:none}
+nav.layers a{display:flex;align-items:center;gap:8px;padding:6px 10px;border-radius:4px;text-decoration:none;font-size:.86rem;font-weight:500;white-space:nowrap;color:var(--muted)}
+nav.layers a:hover,nav.layers a.on{color:var(--fg);background:color-mix(in srgb,var(--c) 12%,transparent)}
+.sw{width:11px;height:11px;flex:none;border:1.5px solid var(--c);
+  background:repeating-linear-gradient(45deg,var(--c) 0 1.5px,transparent 1.5px 4px)}
+nav.layers .num{font-family:var(--mono);font-size:.7rem;opacity:.7}
+.coords{font-family:var(--mono);font-size:.7rem;color:var(--muted);white-space:nowrap;font-variant-numeric:tabular-nums;min-width:170px;text-align:right}
+@media (max-width:1380px){.coords{display:none}}
+@media (max-width:760px){nav.layers .lbl{display:none} nav.layers a .num{opacity:1} .bar .wrap{gap:10px}}
+
+/* ---------- hero ---------- */
+.hero{position:relative;overflow:hidden;border-bottom:1px solid var(--line)}
+#die{position:absolute;inset:0;width:100%;height:100%;
+  -webkit-mask-image:linear-gradient(90deg,rgba(0,0,0,.18) 0%,rgba(0,0,0,.25) 38%,#000 72%);
+          mask-image:linear-gradient(90deg,rgba(0,0,0,.18) 0%,rgba(0,0,0,.25) 38%,#000 72%)}
+.hero .wrap{position:relative;display:grid;grid-template-columns:minmax(0,1.35fr) minmax(0,.9fr);gap:clamp(28px,5vw,72px);padding-block:clamp(48px,8vw,104px) 40px;align-items:center}
+.eyebrow{display:flex;align-items:center;gap:10px;color:var(--muted);margin-bottom:22px;text-transform:uppercase}
+.eyebrow .sw{--c:var(--via)}
+.hero h1{font-family:var(--display);font-weight:800;font-size:clamp(2.7rem,7.4vw,6rem);line-height:.92;letter-spacing:-.035em}
+.hero h1 span{display:block}
+.hero h1 .l2{color:transparent;-webkit-text-stroke:1.5px var(--fg);}
+.lede{font-size:clamp(1.15rem,1.8vw,1.4rem);line-height:1.45;font-weight:500;margin:26px 0 0;max-width:34ch}
+.bio{color:var(--muted);max-width:62ch;margin:18px 0 0}
+.edu{display:grid;gap:12px;margin-top:26px;max-width:64ch}
+.edu p{margin:0;padding:14px 16px;background:var(--panel);border:1px solid var(--line);font-size:.94rem;line-height:1.55}
+.edu b{font-weight:600}
+.portrait{position:relative;margin:0;padding:18px}
+.portrait::before,.portrait::after{content:"";position:absolute;width:26px;height:26px;border:2px solid var(--via)}
+.portrait::before{top:0;left:0;border-right:0;border-bottom:0}
+.portrait::after{bottom:0;right:0;border-left:0;border-top:0}
+.portrait .frame{aspect-ratio:4/5}
+.portrait figcaption{display:flex;justify-content:space-between;margin-top:10px;color:var(--muted)}
+
+/* image frames: hatched ground shows while loading or if an image is missing */
+.frame{position:relative;overflow:hidden;background:var(--panel);border:1px solid var(--line);max-width:100%;
+  background-image:repeating-linear-gradient(45deg,color-mix(in srgb,var(--c,var(--m1)) 18%,transparent) 0 1px,transparent 1px 7px)}
+.frame img{width:100%;height:100%;object-fit:cover;position:relative;transition:transform .6s cubic-bezier(.2,.7,.2,1)}
+.frame.missing img{display:none}
+.frame.missing::after{content:attr(data-alt);position:absolute;inset:0;display:grid;place-items:center;padding:16px;text-align:center;
+  font:500 .72rem/1.4 var(--mono);color:var(--muted);letter-spacing:.04em}
+
+/* stats as package pins */
+.pins{position:relative;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));border-top:1px solid var(--line);margin-top:8px}
+.pin{position:relative;padding:22px 18px 30px;border-right:1px solid var(--line)}
+.pin:last-child{border-right:0}
+.pin::before{content:"";position:absolute;top:-1px;left:18px;width:34px;height:7px;background:var(--c)}
+.pin b{display:block;font-family:var(--display);font-weight:700;font-size:clamp(2rem,4vw,3.1rem);line-height:1;color:var(--c);font-variant-numeric:tabular-nums}
+.pin span{display:block;margin-top:8px;font-size:.9rem;color:var(--muted)}
+@media (max-width:860px){
+  .hero .wrap{grid-template-columns:1fr}
+  .portrait{max-width:380px}
+  #die{-webkit-mask-image:linear-gradient(180deg,rgba(0,0,0,.3),rgba(0,0,0,.12));mask-image:linear-gradient(180deg,rgba(0,0,0,.3),rgba(0,0,0,.12))}
+  .pins{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .pin:nth-child(2){border-right:0}
+  .pin:nth-child(-n+2){border-bottom:1px solid var(--line)}
+}
+
+/* ---------- sections ---------- */
+section.layer{padding-block:clamp(64px,9vw,120px);border-bottom:1px solid var(--line)}
+.sec-head{display:grid;grid-template-columns:auto 1fr;gap:6px 22px;align-items:end;margin-bottom:clamp(36px,5vw,60px)}
+.sec-head .tag{grid-column:1/-1;display:flex;align-items:center;gap:10px;color:var(--c);text-transform:uppercase}
+.sec-head .n{font-family:var(--display);font-weight:800;font-size:clamp(3rem,8vw,6.4rem);line-height:.8;color:transparent;-webkit-text-stroke:1.5px var(--c)}
+.sec-head h2{font-family:var(--display);font-weight:700;font-size:clamp(1.8rem,4.2vw,3.2rem);line-height:1;letter-spacing:-.02em}
+.sub{margin:0 0 20px;color:var(--c);text-transform:uppercase;display:flex;align-items:center;gap:10px}
+.sub::after{content:"";flex:1;height:1px;background:var(--line)}
+.meta{color:var(--muted);margin:8px 0 14px;line-height:1.5}
+h3{font-family:var(--body);font-weight:600;font-size:clamp(1.2rem,2vw,1.5rem);line-height:1.25;letter-spacing:-.01em}
+p{margin:0 0 12px}
+
+/* research */
+.proj{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,7fr);gap:clamp(24px,4vw,56px);align-items:start;padding-block:36px;border-top:1px solid var(--line)}
+.proj:first-of-type{border-top:0;padding-top:0}
+.proj:nth-of-type(even) .media{order:2}
+.proj .media .frame{aspect-ratio:4/3}
+.proj .media:hover img{transform:scale(1.035)}
+.proj .media figcaption{margin-top:10px;color:var(--muted);font-size:.9rem;font-style:italic}
+.proj .body{min-width:0;max-width:66ch}
+.pub{margin-top:18px;padding:16px 18px;background:var(--panel);border:1px solid var(--line);position:relative}
+.pub .k{display:flex;align-items:center;gap:8px;color:var(--c);text-transform:uppercase;margin-bottom:6px}
+.via{width:9px;height:9px;background:var(--c);flex:none;box-shadow:0 0 0 3px color-mix(in srgb,var(--c) 25%,transparent)}
+.pub p{margin:0;font-size:.95rem}
+.go{display:inline-flex;margin-top:10px;font-weight:600;text-decoration:none;border-bottom:1.5px solid var(--c);padding-bottom:1px}
+.go:hover{color:var(--c)}
+@media (max-width:820px){.proj{grid-template-columns:1fr}.proj:nth-of-type(even) .media{order:0}}
+
+/* experience */
+.group{margin-bottom:56px}
+.group:last-child{margin-bottom:0}
+.role{display:grid;grid-template-columns:150px minmax(0,1fr);gap:clamp(18px,3vw,36px);padding:24px 0;border-top:1px solid var(--line);align-items:start}
+.role:first-of-type{border-top:0}
+.role .frame{aspect-ratio:1/1}
+.role:hover .frame img{transform:scale(1.06)}
+.role .body{max-width:70ch;min-width:0}
+.role .meta{margin:6px 0 10px}
+.role p:last-child{margin-bottom:0}
+@media (max-width:560px){.role{grid-template-columns:76px minmax(0,1fr)}}
+
+/* skills floorplan */
+.floor{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:10px}
+.blk{position:relative;padding:22px 22px 24px;border:1.5px solid var(--c);background:var(--panel);min-width:0;
+  background-image:repeating-linear-gradient(-45deg,color-mix(in srgb,var(--c) 10%,transparent) 0 1px,transparent 1px 9px)}
+.blk .mono{color:var(--c);text-transform:uppercase;display:block;margin-bottom:10px}
+.blk h3{margin-bottom:10px}
+.blk p{margin:0;color:var(--fg)}
+.blk.hw{grid-column:span 4;--c:var(--m1)}
+.blk.img{grid-column:span 2;grid-row:span 2;padding:0;--c:var(--via)}
+.blk.img .frame{height:100%;min-height:220px;border:0}
+.blk.pr{grid-column:span 2;--c:var(--m2)}
+.blk.tl{grid-column:span 2;--c:var(--diff)}
+.blk.ld{grid-column:span 6;--c:var(--poly)}
+@media (max-width:820px){.floor{grid-template-columns:1fr}.blk.hw,.blk.img,.blk.pr,.blk.tl,.blk.ld{grid-column:auto;grid-row:auto}.blk.img .frame{aspect-ratio:16/9;min-height:0}}
+
+/* timeline as logic analyzer */
+.scope{border:1px solid var(--line);background:var(--panel)}
+.scope-top{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:10px 16px;border-bottom:1px solid var(--line);color:var(--muted)}
+.scope-top .ch{display:flex;gap:16px}
+.scope-top .ch span{display:flex;align-items:center;gap:6px}
+.scope-top i{width:14px;height:2px;background:var(--c);display:inline-block}
+.track{overflow-x:auto;cursor:grab;scrollbar-width:thin;user-select:none}
+.track.drag{cursor:grabbing}
+.lanes{display:flex;width:max-content;padding:0 16px 20px}
+.ev{width:310px;flex:none;position:relative}
+.ev .clk{display:block;width:100%;height:22px;margin-top:14px;color:var(--muted);opacity:.55}
+.ev .bus{margin-top:10px;height:34px;display:flex;align-items:center;justify-content:center;
+  font:500 .78rem var(--mono);letter-spacing:.04em;color:var(--bg);background:var(--c);
+  clip-path:polygon(12px 0,calc(100% - 12px) 0,100% 50%,calc(100% - 12px) 100%,12px 100%,0 50%);margin-right:-6px;transition:filter .2s}
+.ev .card{margin:16px 14px 0 2px;padding:16px 0 0;border-top:1px dashed var(--line)}
+.ev h3{font-size:1.06rem}
+.ev .org{display:block;color:var(--c);font:500 .74rem/1.4 var(--mono);letter-spacing:.04em;margin-top:5px;text-transform:uppercase}
+.ev p{margin:10px 0 0;font-size:.92rem;color:var(--muted);line-height:1.55}
+.ev::before{content:"";position:absolute;left:0;top:0;bottom:0;width:1px;background:var(--line)}
+.ev:hover .bus{filter:brightness(1.12)}
+.ev:hover::before{background:var(--c)}
+.hint{color:var(--muted);margin:-28px 0 22px}
+
+/* contact pads */
+footer{padding-block:clamp(56px,8vw,96px) 40px}
+.pads{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+.pad{display:block;padding:18px 18px 20px;border:1.5px solid var(--line);text-decoration:none;background:var(--panel);min-width:0;transition:border-color .2s,transform .2s}
+.pad:hover{border-color:var(--via);transform:translateY(-2px)}
+.pad .mono{color:var(--muted);text-transform:uppercase;display:flex;align-items:center;gap:8px}
+.pad .via{--c:var(--via)}
+.pad b{display:block;margin-top:10px;font-weight:600;font-size:1.02rem;overflow-wrap:anywhere}
+.foot{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-top:36px;color:var(--muted)}
+.resume-cta{display:inline-flex;align-items:center;gap:10px;margin-top:28px;padding:14px 22px;background:var(--fg);color:var(--bg);text-decoration:none;font-family:var(--display);font-weight:700;font-size:.9rem}
+.resume-cta:hover{background:var(--via);color:#14152a}
+@media (max-width:860px){.pads{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:440px){.pads{grid-template-columns:1fr}}
+
+/* entrance: content visible at rest, gentle lift when JS is on */
+@media (prefers-reduced-motion: no-preference){
+  .js .rise{animation:rise .8s cubic-bezier(.2,.7,.2,1) both}
+  .js .rise.d1{animation-delay:.08s}.js .rise.d2{animation-delay:.16s}.js .rise.d3{animation-delay:.24s}.js .rise.d4{animation-delay:.32s}
+  @keyframes rise{from{transform:translateY(14px);opacity:.001}to{transform:none;opacity:1}}
+}
+</style>
 </head>
 <body>
+<header class="bar">
+  <div class="wrap">
+    <a class="brand" href="#home">Lucas Chiang</a>
+    <button class="theme" id="themeBtn" type="button" aria-label="Toggle light and dark theme">☾</button>
+    <nav class="layers" aria-label="Sections">
+      <a href="#home" style="--c:var(--via)"><span class="sw"></span><span class="num">01</span><span class="lbl">Home</span></a>
+      <a href="#research" style="--c:var(--m1)"><span class="sw"></span><span class="num">02</span><span class="lbl">Research Projects</span></a>
+      <a href="#experience" style="--c:var(--m2)"><span class="sw"></span><span class="num">03</span><span class="lbl">Experience &amp; Leadership</span></a>
+      <a href="#skills" style="--c:var(--diff)"><span class="sw"></span><span class="num">04</span><span class="lbl">Skills</span></a>
+      <a href="#timeline" style="--c:var(--poly)"><span class="sw"></span><span class="num">05</span><span class="lbl">Interactive Timeline</span></a>
+      <a href="assets/resume.pdf" target="_blank" rel="noopener" style="--c:var(--fg)"><span class="sw"></span><span class="num">06</span><span class="lbl">Resume</span></a>
+    </nav>
+    <div class="coords" id="coords" aria-hidden="true">x 0000.0 µm · y 0000.0 µm</div>
+  </div>
+</header>
 
-  <!-- Top bar -->
-  <header class="topbar">
-    <button class="menu-btn" id="menuBtn" aria-label="Open navigation" aria-expanded="false" aria-controls="navPanel">
-      <span class="menu-line"></span>
-      <span class="menu-line"></span>
-      <span class="menu-line"></span>
-    </button>
-    <span class="topbar-title">Lucas Chiang</span>
-    <span class="topbar-spacer" aria-hidden="true"></span>
-    <button class="theme-toggle" id="themeToggle" aria-label="Toggle dark mode">☾</button>
-  </header>
-
-  <!-- Slide-in nav panel, styled like a catalog index -->
-  <nav class="nav-panel" id="navPanel" aria-hidden="true">
-    <ol class="nav-list">
-      <li><a href="#home" data-page="home"><span class="nav-num">01</span><span class="nav-label">Home</span></a></li>
-      <li><a href="#research" data-page="research"><span class="nav-num">02</span><span class="nav-label">Research Projects</span></a></li>
-      <li><a href="#experience" data-page="experience"><span class="nav-num">03</span><span class="nav-label">Experience &amp; Leadership</span></a></li>
-      <li><a href="#skills" data-page="skills"><span class="nav-num">04</span><span class="nav-label">Skills</span></a></li>
-      <li><a href="#timeline" data-page="timeline"><span class="nav-num">05</span><span class="nav-label">Interactive Timeline</span></a></li>
-      <li><a href="assets/resume.pdf" target="_blank" rel="noopener"><span class="nav-num">06</span><span class="nav-label">Resume</span></a></li>
-    </ol>
-  </nav>
-  <div class="nav-overlay" id="navOverlay"></div>
-
-  <main>
-    <!-- HOME -->
-    <section class="page" id="home" data-page="home">
-      <div class="card-tab">No. 01</div>
-      <div class="page-inner home-layout">
-        <span class="page-num-bg" aria-hidden="true">01</span>
-        <div class="home-text">
-          <p class="eyebrow">Portfolio</p>
-          <h1>Lucas Chiang</h1>
-          <div class="title-rule"></div>
-          <p class="tagline">Electrical engineering student at Purdue building low-power systems, thin-film devices, and chip-scale platforms.</p>
-          <p class="body-copy">
-            Hands-on researcher and design leader with published work in wearable thermoelectric energy harvesting
-            and exoplanet light-curve validation. Currently learning System-on-Chip design, systemVerilog, Digital 
-            Design, and Circuitry through Purdue System-on-Chip Extension Technologies and onboarding with the 
-            propulsion team on Purdue Orbital.
-          </p>
-          <p class="body-copy">
-            <strong>Education:</strong> Purdue University — Bachelor of Engineering in Electrical Engineering
-            (Class of 2030); Minors in Computer Engineering and Management.
-          </p>
-          <p class="body-copy">
-            <strong>Secondary Education:</strong> River Hill High School — Diploma with focus in Electrical and
-            Electronics Engineering (Sep 2022 – May 2026). Coursework included AP Physics C (Mechanics, E&amp;M),
-            AP Calculus AB/BC, AP Chemistry, AP Computer Science Principles, AP Biology, and Differential Equations.
-          </p>
-        </div>
-        <figure class="photo-placeholder">
-            <img src="assets/DSC_4863.jpg" alt="Lucas Chiang" class="photo-box photo-img">
-        </figure>
+<main>
+<!-- ============ 01 HOME ============ -->
+<section class="hero" id="home">
+  <canvas id="die" aria-hidden="true"></canvas>
+  <div class="wrap">
+    <div>
+      <div class="eyebrow mono rise"><span class="sw"></span>01 · Portfolio</div>
+      <h1 class="rise d1"><span>Lucas</span><span class="l2">Chiang</span></h1>
+      <p class="lede rise d2">Electrical engineering student at Purdue building low-power systems, thin-film devices, and chip-scale platforms.</p>
+      <p class="bio rise d3">Hands-on researcher and design leader with published work in wearable thermoelectric energy harvesting and exoplanet light-curve validation. Currently learning System-on-Chip design, systemVerilog, Digital Design, and Circuitry through Purdue System-on-Chip Extension Technologies and onboarding with the propulsion team on Purdue Orbital.</p>
+      <div class="edu rise d4">
+        <p><b>Education:</b> Purdue University — Bachelor of Engineering in Electrical Engineering (Class of 2030); Minors in Computer Engineering and Management.</p>
+        <p><b>Secondary Education:</b> River Hill High School — Diploma with focus in Electrical and Electronics Engineering (Sep 2022 – May 2026). Coursework included AP Physics C (Mechanics, E&amp;M), AP Calculus AB/BC, AP Chemistry, AP Computer Science Principles, AP Biology, and Differential Equations.</p>
       </div>
-
-      <div class="stat-row">
-        <div class="stat-block">
-          <p class="stat-number">3</p>
-          <p class="stat-label">Research Experiences</p>
-        </div>
-        <div class="stat-block">
-          <p class="stat-number">2</p>
-          <p class="stat-label">Published Papers</p>
-        </div>
-        <div class="stat-block">
-          <p class="stat-number">2</p>
-          <p class="stat-label">Research Posters</p>
-        </div>
-        <div class="stat-block">
-          <p class="stat-number">6</p>
-          <p class="stat-label">Years Robotics Leadership</p>
-        </div>
-      </div>
-    </section>
-
-    <!-- RESEARCH PROJECTS -->
-    <section class="page" id="research" data-page="research">
-      <div class="card-tab">No. 02</div>
-      <div class="page-inner">
-        <span class="page-num-bg" aria-hidden="true">02</span>
-        <p class="eyebrow">Section 02</p>
-        <h1>Research Projects</h1>
-        <div class="title-rule"></div>
-
-        <div class="entry-grid">
-          <article class="entry">
-            <figure class="photo-placeholder">
-              <img src="assets/Thermoelectric.jpg" alt="Thermoelectric generator setup" class="photo-box photo-img">
-            </figure>
-            <h2>Sustainable Wearable Electronics — Thermoelectric Power Systems</h2>
-            <p class="entry-meta">University of Maryland, Baltimore County — July 2025 – August 2026 · Baltimore, MD</p>
-            <p class="body-copy">
-              Designed a PCB/IC platform on a breadboard that generates an electrical pulse every few minutes
-              using thermoelectric generators (TEGs)—sufficient to power a wearable electrocardiograph long
-              enough to capture a reading. Led PCB fabrication and tested 10 trials across 4 TEG configurations
-              with 3+ controlled environmental variables to identify the most efficient array.
-            </p>
-            <p class="body-copy">
-              Published as: <em>"Utilization of Commercial Peltier Thermoelectric Generators
-              for Continuous Wearable Device Use,"</em> Oxford Journal of Student Scholarship,
-              June 2026. Found no significant gain from series TEGs but a clear improvement from heat sinks.
-              <a href="https://www.oxfordjss.org/june-2026-vol-8-issue-2/utilization-of-commercial-peltier-thermoelectric-generators-for-continuous-wearable-device-use" target="_blank" rel="noopener">Read the publication →</a>
-            </p>
-          </article>
-
-          <article class="entry">
-            <figure class="photo-placeholder">
-              <img src="assets/cmo-poster.jpg" alt="Research poster: Modulation of Electrical Transport and Structural Properties of CaMnO3 Epitaxial Thin Films" class="photo-box photo-img">
-              <figcaption>Poster presented at Towson University — <a href="assets/cmo-thin-film-poster.pdf" target="_blank" rel="noopener">view full PDF</a></figcaption>
-            </figure>
-            <h2>Calcium Manganese Oxide Thin Films</h2>
-            <p class="entry-meta">Towson University — July 2025 – August 2025 · Towson, MD</p>
-            <p class="body-copy">
-              Fabricated 10 CMO thin-film metal-oxide samples via pulsed laser deposition and measured
-              electrical resistance with the four-point probe method. Gained ISO 7 clean-room experience
-              while fluorinating 5+ films by spin-coating. Collaborated with graduate researchers to
-              correlate structural properties (X-ray diffraction) with electrical transport behavior.
-            </p>
-          </article>
-
-          <article class="entry">
-            <figure class="photo-placeholder">
-              <img src="assets/20201218_image2_lg.jpg" alt="Observatory / exoplanet research imagery" class="photo-box photo-img">
-            </figure>
-            <h2>Exoplanet Light Curve Validation (TOI 5868.01)</h2>
-            <p class="entry-meta">George Mason University — Summer 2024 · Fairfax, VA</p>
-            <p class="body-copy">
-              Examined ground-based light-curve data from the George Mason Telescope with AstroImageJ
-              to validate a TESS Object of Interest as a candidate exoplanet. Built a Python Jupyter
-              Notebook pipeline that formatted 100+ images into light-curve data and performed the
-              preliminary analysis of TOI 5868.01.
-            </p>
-            <p class="body-copy">
-              Published as: <em>"Ground-Based Light Curve Follow-Up Validation Observations
-              of TESS Object of Interest (TOI) 5868.01,"</em> George Mason MARS Repository,
-              August 2024. Concluded a high likelihood that TOI 5868.01 is a genuine exoplanet,
-              while noting further work is needed to rule out a false positive.
-              <a href="https://digitalcollections.gmu.edu/record/76334?ln=en&p=Toi+5868.01&v=pdf" target="_blank" rel="noopener">Read the publication →</a>
-            </p>
-          </article>
-        </div>
-      </div>
-    </section>
-
-    <!-- EXPERIENCE & LEADERSHIP -->
-    <section class="page" id="experience" data-page="experience">
-      <div class="card-tab">No. 03</div>
-      <div class="page-inner">
-        <span class="page-num-bg" aria-hidden="true">03</span>
-        <p class="eyebrow">Section 03</p>
-        <h1>Experience &amp; Leadership</h1>
-        <div class="title-rule"></div>
-
-        <p class="group-label">Current Technical Roles — Purdue University</p>
-        <div class="timeline">
-          <div class="timeline-item">
-            <figure class="photo-placeholder">
-              <img src="assets/breadboard.jpg" alt="PCB research platform" class="photo-box photo-img">
-            </figure>
-            <div class="timeline-text">
-              <h2>STARS Chip Design Program — Purdue SoCET</h2>
-              <p class="entry-meta">Purdue System-on-Chip Extension Technologies · August 2026 – Present · West Lafayette, IN</p>
-              <p class="body-copy">
-                Building foundations in digital logic, circuit design, transistors, and SystemVerilog.
-              </p>
-            </div>
-          </div>
-
-          <div class="timeline-item">
-            <figure class="photo-placeholder">
-              <img src="assets/rocketry.jpg" alt="rocket" class="photo-box photo-img">
-            </figure>
-            <div class="timeline-text">
-              <h2>Purdue Orbital - Propulsion</h2>
-              <p class="entry-meta">September 2026 – Present · West Lafayette, IN</p>
-              <p class="body-copy">
-                Onboarding to the propulsion team with an interest in working on the Data Aquisition Systems (DAQ).
-              </p>
-            </div>
-          </div>
-        </div>
-
-        <p class="group-label">Prior Research &amp; Professional Experience</p>
-        <div class="timeline">
-          <div class="timeline-item">
-            <figure class="photo-placeholder">
-              <img src="assets/Thermoelectric.jpg" alt="Wearable thermoelectric research" class="photo-box photo-img">
-            </figure>
-            <div class="timeline-text">
-              <h2>Sustainable Wearable Electronics Researcher</h2>
-              <p class="entry-meta">University of Maryland Baltimore County — July 2025 – August 2026 · Baltimore, MD · On-site</p>
-              <p class="body-copy">
-                Designed and fabricated a TEG-powered PCB/IC platform capable of generating periodic
-                pulses to briefly power a wearable electrocardiograph. Executed 10 controlled trials
-                across multiple TEG arrays and environmental variables; led PCB fabrication.
-              </p>
-            </div>
-          </div>
-
-          <div class="timeline-item">
-            <figure class="photo-placeholder">
-              <img src="assets/XRD.webp" alt="X-ray diffraction / thin film characterization" class="photo-box photo-img">
-            </figure>
-            <div class="timeline-text">
-              <h2>Thin Films Research Intern</h2>
-              <p class="entry-meta">Towson University — July 2025 – August 2025 · Towson, MD · On-site</p>
-              <p class="body-copy">
-                Fabricated 10 CMO thin-film samples by pulsed laser deposition, performed four-point
-                probe resistance measurements, and completed ISO 7 clean-room fluorination of 5+ films.
-                Collaborated with graduate researchers on XRD structural characterization.
-              </p>
-            </div>
-          </div>
-
-          <div class="timeline-item">
-            <figure class="photo-placeholder">
-              <img src="assets/TESS.png" alt="TESS / exoplanet data analysis" class="photo-box photo-img">
-            </figure>
-            <div class="timeline-text">
-              <h2>NASA Data Science &amp; Scholarly Research Intern</h2>
-              <p class="entry-meta">George Mason University, Schar School — Summer 2024 · Fairfax, VA</p>
-              <p class="body-copy">
-                Analyzed ground-based light-curve data with AstroImageJ and a custom Python Jupyter
-                Notebook pipeline (100+ images) to validate exoplanet candidate TOI 5868.01 against
-                JWST expectations. Results published in the George Mason MARS Repository.
-              </p>
-            </div>
-          </div>
-
-          <div class="timeline-item">
-            <figure class="photo-placeholder">
-              <img src="assets/swim.avif" alt="Swim instruction" class="photo-box photo-img">
-            </figure>
-            <div class="timeline-text">
-              <h2>Swim Instructor</h2>
-              <p class="entry-meta">Columbia Association — June 2023 – January 2025 · Columbia, MD · Part-time</p>
-              <p class="body-copy">
-                Taught children ages 6–12 the four basic strokes and foundational water skills.
-                Led large classes and tracked individual progress across six-week sessions to refine lesson plans.
-              </p>
-            </div>
-          </div>
-        </div>
-
-        <p class="group-label">Leadership</p>
-        <div class="entry-grid">
-          <article class="entry">
-            <figure class="photo-placeholder">
-              <img src="assets/FTC(1).png" alt="FIRST Tech Challenge robot / team" class="photo-box photo-img">
-            </figure>
-            <h2>Design Leader &amp; Outreach Lead — Team 18996</h2>
-            <p class="entry-meta">FIRST Tech Challenge (STATIC) — September 2020 – June 2026 · Clarksville, MD</p>
-            <p class="body-copy">
-              Directed design-team meetings and applied risk-management methods to guide 30+ subsystem
-              requirements and 20+ 3D-printed/CNC prototypes each season. Wired robot electrical systems
-              and iterated intake/transfer mechanisms more than 10 times; 3D-printed over half the robot’s
-              parts in Fusion 360. Led outreach for three years, securing 10+ sponsors and teaching STEM
-              to underserved youth in Baltimore (raised over $10,000 in a single year).
-            </p>
-          </article>
-
-          <article class="entry">
-            <figure class="photo-placeholder">
-              <img src="assets/DSC_5759.jpg" alt="Student leadership activities" class="photo-box photo-img">
-            </figure>
-            <h2>Student Leadership — River Hill High School</h2>
-            <p class="entry-meta">September 2022 – May 2026</p>
-            <p class="body-copy">
-              Co-President and Founder of the River Hill Economics Club and Engineering Club.
-              Captain of Cross Country and member of Track &amp; Field. Vice President of the
-              Maryland Technology Honor Society (River Hill Chapter). Section Leader in the
-              River Hill Marching Band and Wind Ensemble.
-            </p>
-          </article>
-        </div>
-      </div>
-    </section>
-
-    <!-- SKILLS -->
-    <section class="page" id="skills" data-page="skills">
-      <div class="card-tab">No. 04</div>
-      <div class="page-inner">
-        <span class="page-num-bg" aria-hidden="true">04</span>
-        <p class="eyebrow">Section 04</p>
-        <h1>Skills</h1>
-        <div class="title-rule"></div>
-        <figure class="photo-placeholder">
-          <img src="assets/EE Circuit Experiment.jpg" alt="Electrical engineering lab work" class="photo-box photo-img">
-        </figure>
-
-        <div class="tag-grid">
-          <div class="tag-card">
-            <h2>Hardware</h2>
-            <p class="body-copy">PCB Design &amp; Manufacturing, Digital Logic Design, Circuit Design, Integrated Circuits, Materials Characterization, Pulsed Laser Deposition, Four-point Probe, X-ray Diffraction.</p>
-          </div>
-          <div class="tag-card">
-            <h2>Programming</h2>
-            <p class="body-copy">Python, C, SystemVerilog, MATLAB, Java. Jupyter Notebook pipelines, light-curve analysis, data formatting and visualization.</p>
-          </div>
-          <div class="tag-card">
-            <h2>Tools &amp; Platforms</h2>
-            <p class="body-copy">Linux, Fusion 360, STK, AstroImageJ, clean-room spin-coating.</p>
-          </div>
-          <div class="tag-card">
-            <h2>Leadership &amp; Research Practice</h2>
-            <p class="body-copy">Project &amp; risk management, sponsorship development, academic publishing, technical writing, STEM outreach, team design leadership.</p>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- INTERACTIVE TIMELINE -->
-    <section class="page" id="timeline" data-page="timeline">
-      <div class="card-tab">No. 05</div>
-      <div class="page-inner">
-        <span class="page-num-bg" aria-hidden="true">05</span>
-        <p class="eyebrow">Section 05</p>
-        <h1>Interactive Timeline</h1>
-        <div class="title-rule"></div>
-        <p class="body-copy">Scroll sideways (or click-and-drag) to move through each stop along the way.</p>
-      </div>
-
-      <div class="htl-wrap">
-        <div class="htl-scroll">
-        <div class="htl-track">
-
-          <div class="htl-item htl-above">
-            <div class="htl-card">
-              <div class="htl-icon" aria-hidden="true">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
-                  <circle cx="12" cy="12" r="3.2"/>
-                  <path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3M5.1 5.1l2.1 2.1M16.8 16.8l2.1 2.1M5.1 18.9l2.1-2.1M16.8 7.2l2.1-2.1"/>
-                </svg>
-              </div>
-              <p class="epoch-date">Sep 2020</p>
-              <h2 class="htl-title">Design &amp; Outreach Leader<br>Team 18996, FIRST Tech Challenge</h2>
-              <p class="body-copy">
-                Joined FTC Team 18996 (STATIC). Over six seasons led design meetings for 30+ subsystem
-                requirements, iterated 20+ prototypes, wired electrical systems, and ran outreach that
-                secured 10+ sponsors and raised over $10,000 in one year.
-              </p>
-            </div>
-            <div class="htl-stem"></div>
-            <div class="htl-dot"></div>
-          </div>
-
-          <div class="htl-item htl-below">
-            <div class="htl-dot"></div>
-            <div class="htl-stem"></div>
-            <div class="htl-card">
-              <div class="htl-icon" aria-hidden="true">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M5 21V4"/>
-                  <path d="M5 4h13l-3 4 3 4H5"/>
-                </svg>
-              </div>
-              <p class="epoch-date">Sep 2022</p>
-              <h2 class="htl-title">Student Leadership Begins<br>River Hill High School</h2>
-              <p class="body-copy">
-                Founded and co-presided over the Economics and Engineering Clubs, served as
-                Cross Country captain, Maryland Technology Honor Society vice president, and
-                marching-band section leader.
-              </p>
-            </div>
-          </div>
-
-          <div class="htl-item htl-above">
-            <div class="htl-card">
-              <div class="htl-icon" aria-hidden="true">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M2 9c1.7-1.7 3.3-1.7 5 0s3.3 1.7 5 0 3.3-1.7 5 0 3.3 1.7 5 0"/>
-                  <path d="M2 15c1.7-1.7 3.3-1.7 5 0s3.3 1.7 5 0 3.3-1.7 5 0 3.3 1.7 5 0"/>
-                </svg>
-              </div>
-              <p class="epoch-date">Jun 2023</p>
-              <h2 class="htl-title">Swim Instructor<br>Columbia Association</h2>
-              <p class="body-copy">
-                Taught ages 6–12 the four basic strokes and water safety, leading large classes
-                and tracking individual progress over six-week sessions.
-              </p>
-            </div>
-            <div class="htl-stem"></div>
-            <div class="htl-dot"></div>
-          </div>
-
-          <div class="htl-item htl-below">
-            <div class="htl-dot"></div>
-            <div class="htl-stem"></div>
-            <div class="htl-card">
-              <div class="htl-icon" aria-hidden="true">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M12 2c3 2 4 6 4 10l-4 4-4-4c0-4 1-8 4-10z"/>
-                  <path d="M8 14l-3 5 5-3"/>
-                  <path d="M16 14l3 5-5-3"/>
-                  <circle cx="12" cy="9" r="1.4"/>
-                </svg>
-              </div>
-              <p class="epoch-date">Summer 2024</p>
-              <h2 class="htl-title">NASA Research Intern<br>George Mason University</h2>
-              <p class="body-copy">
-                Built a Python + AstroImageJ pipeline for 100+ images to validate exoplanet
-                candidate TOI 5868.01. Work published in the George Mason MARS Repository.
-              </p>
-            </div>
-          </div>
-
-          <div class="htl-item htl-above">
-            <div class="htl-card">
-              <div class="htl-icon" aria-hidden="true">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M13 2 4 14h6l-1 8 9-12h-6z"/>
-                </svg>
-              </div>
-              <p class="epoch-date">Jul 2025</p>
-              <h2 class="htl-title">Wearable Thermoelectrics<br>UMBC</h2>
-              <p class="body-copy">
-                Designed TEG-powered PCB platforms for wearable ECG use, ran 10 controlled trials,
-                led fabrication, and published findings in the Oxford Journal of Student Scholarship.
-              </p>
-            </div>
-            <div class="htl-stem"></div>
-            <div class="htl-dot"></div>
-          </div>
-
-          <div class="htl-item htl-below">
-            <div class="htl-dot"></div>
-            <div class="htl-stem"></div>
-            <div class="htl-card">
-              <div class="htl-icon" aria-hidden="true">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M9 2h6"/>
-                  <path d="M10 2v6l-5.5 9.5A2 2 0 0 0 6.2 21h11.6a2 2 0 0 0 1.7-3.5L14 8V2"/>
-                  <path d="M7 15h10"/>
-                </svg>
-              </div>
-              <p class="epoch-date">Jul 2025</p>
-              <h2 class="htl-title">CMO Thin Film Research<br>Towson University</h2>
-              <p class="body-copy">
-                Grew 10 calcium manganese oxide thin films by pulsed laser deposition, fluorinated
-                films in an ISO 7 clean room, and characterized them with XRD and four-point probe.
-              </p>
-            </div>
-          </div>
-
-          <div class="htl-item htl-above">
-            <div class="htl-card">
-              <div class="htl-icon" aria-hidden="true">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
-                  <rect x="3" y="3" width="7" height="7" rx="1"/>
-                  <rect x="14" y="3" width="7" height="7" rx="1"/>
-                  <rect x="3" y="14" width="7" height="7" rx="1"/>
-                  <rect x="14" y="14" width="7" height="7" rx="1"/>
-                </svg>
-              </div>
-              <p class="epoch-date">Aug 2026</p>
-              <h2 class="htl-title">Purdue SoCET </h2>
-              <p class="body-copy">
-                Joined the STARS Chip Design Program (KiCAD, systemVerilog, Digital Logic, Circuitry)
-              </p>
-            </div>
-            <div class="htl-stem"></div>
-            <div class="htl-dot"></div>
-          </div>
-
-          <div class="htl-item htl-below">
-            <div class="htl-dot"></div>
-            <div class="htl-stem"></div>
-            <div class="htl-card">
-              <div class="htl-icon" aria-hidden="true">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M12 2v4"/>
-                  <path d="M12 18v4"/>
-                  <path d="M4.93 4.93l2.83 2.83"/>
-                  <path d="M16.24 16.24l2.83 2.83"/>
-                  <path d="M2 12h4"/>
-                  <path d="M18 12h4"/>
-                  <path d="M4.93 19.07l2.83-2.83"/>
-                  <path d="M16.24 7.76l2.83-2.83"/>
-                  <circle cx="12" cy="12" r="3"/>
-                </svg>
-              </div>
-              <p class="epoch-date">Sept 2026</p>
-              <h2 class="htl-title">Purdue Orbital<br>Propulsion Member</h2>
-              <p class="body-copy">
-                Began onboarding for propulsion team.
-              </p>
-            </div>
-          </div>
-
-        </div>
-      </div>
-      </div>
-    </section>
-  </main>
-
-  <footer class="site-footer">
-    <div class="footer-contact">
-      <a href="tel:+14107821941">+1 (410) 782-1941</a>
-      <a href="mailto:chian158@purdue.edu">chian158@purdue.edu</a>
-      <a href="https://linkedin.com/in/lucas-chiang-153822381" target="_blank" rel="noopener">LinkedIn</a>
-      <a href="https://lucaschiang.com" target="_blank" rel="noopener">lucaschiang.com</a>
     </div>
-    <p>© <span id="year"></span> Lucas Chiang. Built as a portfolio site.</p>
-  </footer>
+    <figure class="portrait rise d2">
+      <div class="frame" style="--c:var(--via)" data-alt="Lucas Chiang"><img src="assets/DSC_4863.jpg" alt="Lucas Chiang"></div>
+      <figcaption class="mono"><span>Lucas Chiang</span><span>Purdue EE ’30</span></figcaption>
+    </figure>
+  </div>
+  <div class="wrap">
+    <div class="pins">
+      <div class="pin" style="--c:var(--m1)"><b data-count="3">3</b><span>Research Experiences</span></div>
+      <div class="pin" style="--c:var(--m2)"><b data-count="2">2</b><span>Published Papers</span></div>
+      <div class="pin" style="--c:var(--diff)"><b data-count="2">2</b><span>Research Posters</span></div>
+      <div class="pin" style="--c:var(--poly)"><b data-count="6">6</b><span>Years Robotics Leadership</span></div>
+    </div>
+  </div>
+</section>
 
-<script src="script.js"></script>
+<!-- ============ 02 RESEARCH ============ -->
+<section class="layer" id="research" style="--c:var(--m1)">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="tag mono"><span class="sw"></span>Section 02</div>
+      <div class="n" aria-hidden="true">02</div>
+      <h2>Research Projects</h2>
+    </div>
+
+    <article class="proj">
+      <figure class="media" style="margin:0"><div class="frame" data-alt="Thermoelectric generator setup"><img src="assets/Thermoelectric.jpg" alt="Thermoelectric generator setup" loading="lazy"></div></figure>
+      <div class="body">
+        <h3>Sustainable Wearable Electronics — Thermoelectric Power Systems</h3>
+        <p class="meta mono">University of Maryland, Baltimore County — July 2025 – August 2026 · Baltimore, MD</p>
+        <p>Designed a PCB/IC platform on a breadboard that generates an electrical pulse every few minutes using thermoelectric generators (TEGs)—sufficient to power a wearable electrocardiograph long enough to capture a reading. Led PCB fabrication and tested 10 trials across 4 TEG configurations with 3+ controlled environmental variables to identify the most efficient array.</p>
+        <div class="pub">
+          <div class="k mono"><span class="via"></span>Published as</div>
+          <p><em>"Utilization of Commercial Peltier Thermoelectric Generators for Continuous Wearable Device Use,"</em> Oxford Journal of Student Scholarship, June 2026. Found no significant gain from series TEGs but a clear improvement from heat sinks.</p>
+          <a class="go" href="https://www.oxfordjss.org/june-2026-vol-8-issue-2/utilization-of-commercial-peltier-thermoelectric-generators-for-continuous-wearable-device-use" target="_blank" rel="noopener">Read the publication →</a>
+        </div>
+      </div>
+    </article>
+
+    <article class="proj">
+      <figure class="media" style="margin:0">
+        <div class="frame" data-alt="Research poster: Modulation of Electrical Transport and Structural Properties of CaMnO3 Epitaxial Thin Films"><img src="assets/cmo-poster.jpg" alt="Research poster: Modulation of Electrical Transport and Structural Properties of CaMnO3 Epitaxial Thin Films" loading="lazy"></div>
+        <figcaption>Poster presented at Towson University — <a href="assets/cmo-thin-film-poster.pdf" target="_blank" rel="noopener">view full PDF</a></figcaption>
+      </figure>
+      <div class="body">
+        <h3>Calcium Manganese Oxide Thin Films</h3>
+        <p class="meta mono">Towson University — July 2025 – August 2025 · Towson, MD</p>
+        <p>Fabricated 10 CMO thin-film metal-oxide samples via pulsed laser deposition and measured electrical resistance with the four-point probe method. Gained ISO 7 clean-room experience while fluorinating 5+ films by spin-coating. Collaborated with graduate researchers to correlate structural properties (X-ray diffraction) with electrical transport behavior.</p>
+      </div>
+    </article>
+
+    <article class="proj">
+      <figure class="media" style="margin:0"><div class="frame" data-alt="Observatory / exoplanet research imagery"><img src="assets/20201218_image2_lg.jpg" alt="Observatory / exoplanet research imagery" loading="lazy"></div></figure>
+      <div class="body">
+        <h3>Exoplanet Light Curve Validation (TOI 5868.01)</h3>
+        <p class="meta mono">George Mason University — Summer 2024 · Fairfax, VA</p>
+        <p>Examined ground-based light-curve data from the George Mason Telescope with AstroImageJ to validate a TESS Object of Interest as a candidate exoplanet. Built a Python Jupyter Notebook pipeline that formatted 100+ images into light-curve data and performed the preliminary analysis of TOI 5868.01.</p>
+        <div class="pub">
+          <div class="k mono"><span class="via"></span>Published as</div>
+          <p><em>"Ground-Based Light Curve Follow-Up Validation Observations of TESS Object of Interest (TOI) 5868.01,"</em> George Mason MARS Repository, August 2024. Concluded a high likelihood that TOI 5868.01 is a genuine exoplanet, while noting further work is needed to rule out a false positive.</p>
+          <a class="go" href="https://digitalcollections.gmu.edu/record/76334?ln=en&amp;p=Toi+5868.01&amp;v=pdf" target="_blank" rel="noopener">Read the publication →</a>
+        </div>
+      </div>
+    </article>
+  </div>
+</section>
+
+<!-- ============ 03 EXPERIENCE ============ -->
+<section class="layer" id="experience" style="--c:var(--m2)">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="tag mono"><span class="sw"></span>Section 03</div>
+      <div class="n" aria-hidden="true">03</div>
+      <h2>Experience &amp; Leadership</h2>
+    </div>
+
+    <div class="group">
+      <h4 class="sub mono">Current Technical Roles — Purdue University</h4>
+      <div class="role">
+        <div class="frame" data-alt="PCB research platform"><img src="assets/breadboard.jpg" alt="PCB research platform" loading="lazy"></div>
+        <div class="body"><h3>STARS Chip Design Program — Purdue SoCET</h3>
+          <p class="meta mono">Purdue System-on-Chip Extension Technologies · August 2026 – Present · West Lafayette, IN</p>
+          <p>Building foundations in digital logic, circuit design, transistors, and SystemVerilog.</p></div>
+      </div>
+      <div class="role">
+        <div class="frame" data-alt="rocket"><img src="assets/rocketry.jpg" alt="rocket" loading="lazy"></div>
+        <div class="body"><h3>Purdue Orbital - Propulsion</h3>
+          <p class="meta mono">September 2026 – Present · West Lafayette, IN</p>
+          <p>Onboarding to the propulsion team with an interest in working on the Data Aquisition Systems (DAQ).</p></div>
+      </div>
+    </div>
+
+    <div class="group">
+      <h4 class="sub mono">Prior Research &amp; Professional Experience</h4>
+      <div class="role">
+        <div class="frame" data-alt="Wearable thermoelectric research"><img src="assets/Thermoelectric.jpg" alt="Wearable thermoelectric research" loading="lazy"></div>
+        <div class="body"><h3>Sustainable Wearable Electronics Researcher</h3>
+          <p class="meta mono">University of Maryland Baltimore County — July 2025 – August 2026 · Baltimore, MD · On-site</p>
+          <p>Designed and fabricated a TEG-powered PCB/IC platform capable of generating periodic pulses to briefly power a wearable electrocardiograph. Executed 10 controlled trials across multiple TEG arrays and environmental variables; led PCB fabrication.</p></div>
+      </div>
+      <div class="role">
+        <div class="frame" data-alt="X-ray diffraction / thin film characterization"><img src="assets/XRD.webp" alt="X-ray diffraction / thin film characterization" loading="lazy"></div>
+        <div class="body"><h3>Thin Films Research Intern</h3>
+          <p class="meta mono">Towson University — July 2025 – August 2025 · Towson, MD · On-site</p>
+          <p>Fabricated 10 CMO thin-film samples by pulsed laser deposition, performed four-point probe resistance measurements, and completed ISO 7 clean-room fluorination of 5+ films. Collaborated with graduate researchers on XRD structural characterization.</p></div>
+      </div>
+      <div class="role">
+        <div class="frame" data-alt="TESS / exoplanet data analysis"><img src="assets/TESS.png" alt="TESS / exoplanet data analysis" loading="lazy"></div>
+        <div class="body"><h3>NASA Data Science &amp; Scholarly Research Intern</h3>
+          <p class="meta mono">George Mason University, Schar School — Summer 2024 · Fairfax, VA</p>
+          <p>Analyzed ground-based light-curve data with AstroImageJ and a custom Python Jupyter Notebook pipeline (100+ images) to validate exoplanet candidate TOI 5868.01 against JWST expectations. Results published in the George Mason MARS Repository.</p></div>
+      </div>
+      <div class="role">
+        <div class="frame" data-alt="Swim instruction"><img src="assets/swim.avif" alt="Swim instruction" loading="lazy"></div>
+        <div class="body"><h3>Swim Instructor</h3>
+          <p class="meta mono">Columbia Association — June 2023 – January 2025 · Columbia, MD · Part-time</p>
+          <p>Taught children ages 6–12 the four basic strokes and foundational water skills. Led large classes and tracked individual progress across six-week sessions to refine lesson plans.</p></div>
+      </div>
+    </div>
+
+    <div class="group">
+      <h4 class="sub mono">Leadership</h4>
+      <div class="role">
+        <div class="frame" data-alt="FIRST Tech Challenge robot / team"><img src="assets/FTC(1).png" alt="FIRST Tech Challenge robot / team" loading="lazy"></div>
+        <div class="body"><h3>Design Leader &amp; Outreach Lead — Team 18996</h3>
+          <p class="meta mono">FIRST Tech Challenge (STATIC) — September 2020 – June 2026 · Clarksville, MD</p>
+          <p>Directed design-team meetings and applied risk-management methods to guide 30+ subsystem requirements and 20+ 3D-printed/CNC prototypes each season. Wired robot electrical systems and iterated intake/transfer mechanisms more than 10 times; 3D-printed over half the robot’s parts in Fusion 360. Led outreach for three years, securing 10+ sponsors and teaching STEM to underserved youth in Baltimore (raised over $10,000 in a single year).</p></div>
+      </div>
+      <div class="role">
+        <div class="frame" data-alt="Student leadership activities"><img src="assets/DSC_5759.jpg" alt="Student leadership activities" loading="lazy"></div>
+        <div class="body"><h3>Student Leadership — River Hill High School</h3>
+          <p class="meta mono">September 2022 – May 2026</p>
+          <p>Co-President and Founder of the River Hill Economics Club and Engineering Club. Captain of Cross Country and member of Track &amp; Field. Vice President of the Maryland Technology Honor Society (River Hill Chapter). Section Leader in the River Hill Marching Band and Wind Ensemble.</p></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 04 SKILLS ============ -->
+<section class="layer" id="skills" style="--c:var(--diff)">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="tag mono"><span class="sw"></span>Section 04</div>
+      <div class="n" aria-hidden="true">04</div>
+      <h2>Skills</h2>
+    </div>
+    <div class="floor">
+      <div class="blk hw"><span class="mono">Block A</span><h3>Hardware</h3>
+        <p>PCB Design &amp; Manufacturing, Digital Logic Design, Circuit Design, Integrated Circuits, Materials Characterization, Pulsed Laser Deposition, Four-point Probe, X-ray Diffraction.</p></div>
+      <div class="blk img"><div class="frame" data-alt="Electrical engineering lab work"><img src="assets/EE%20Circuit%20Experiment.jpg" alt="Electrical engineering lab work" loading="lazy"></div></div>
+      <div class="blk pr"><span class="mono">Block B</span><h3>Programming</h3>
+        <p>Python, C, SystemVerilog, MATLAB, Java. Jupyter Notebook pipelines, light-curve analysis, data formatting and visualization.</p></div>
+      <div class="blk tl"><span class="mono">Block C</span><h3>Tools &amp; Platforms</h3>
+        <p>Linux, Fusion 360, STK, AstroImageJ, clean-room spin-coating.</p></div>
+      <div class="blk ld"><span class="mono">Block D</span><h3>Leadership &amp; Research Practice</h3>
+        <p>Project &amp; risk management, sponsorship development, academic publishing, technical writing, STEM outreach, team design leadership.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 05 TIMELINE ============ -->
+<section class="layer" id="timeline" style="--c:var(--poly)">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="tag mono"><span class="sw"></span>Section 05</div>
+      <div class="n" aria-hidden="true">05</div>
+      <h2>Interactive Timeline</h2>
+    </div>
+    <p class="hint">Scroll sideways (or click-and-drag) to move through each stop along the way.</p>
+    <div class="scope">
+      <div class="scope-top mono"><span>Sep 2020 → Sept 2026</span><span class="ch"><span style="--c:var(--muted)"><i></i>CLK</span><span style="--c:var(--poly)"><i></i>BUS</span></span></div>
+      <div class="track" id="track" tabindex="0" aria-label="Timeline, scrolls horizontally">
+        <div class="lanes" id="lanes">
+          <div class="ev" style="--c:var(--m1)"><div class="bus">Sep 2020</div><div class="card"><h3>Design &amp; Outreach Leader<span class="org">Team 18996, FIRST Tech Challenge</span></h3><p>Joined FTC Team 18996 (STATIC). Over six seasons led design meetings for 30+ subsystem requirements, iterated 20+ prototypes, wired electrical systems, and ran outreach that secured 10+ sponsors and raised over $10,000 in one year.</p></div></div>
+          <div class="ev" style="--c:var(--m2)"><div class="bus">Sep 2022</div><div class="card"><h3>Student Leadership Begins<span class="org">River Hill High School</span></h3><p>Founded and co-presided over the Economics and Engineering Clubs, served as Cross Country captain, Maryland Technology Honor Society vice president, and marching-band section leader.</p></div></div>
+          <div class="ev" style="--c:var(--diff)"><div class="bus">Jun 2023</div><div class="card"><h3>Swim Instructor<span class="org">Columbia Association</span></h3><p>Taught ages 6–12 the four basic strokes and water safety, leading large classes and tracking individual progress over six-week sessions.</p></div></div>
+          <div class="ev" style="--c:var(--via)"><div class="bus">Summer 2024</div><div class="card"><h3>NASA Research Intern<span class="org">George Mason University</span></h3><p>Built a Python + AstroImageJ pipeline for 100+ images to validate exoplanet candidate TOI 5868.01. Work published in the George Mason MARS Repository.</p></div></div>
+          <div class="ev" style="--c:var(--poly)"><div class="bus">Jul 2025</div><div class="card"><h3>Wearable Thermoelectrics<span class="org">UMBC</span></h3><p>Designed TEG-powered PCB platforms for wearable ECG use, ran 10 controlled trials, led fabrication, and published findings in the Oxford Journal of Student Scholarship.</p></div></div>
+          <div class="ev" style="--c:var(--m1)"><div class="bus">Jul 2025</div><div class="card"><h3>CMO Thin Film Research<span class="org">Towson University</span></h3><p>Grew 10 calcium manganese oxide thin films by pulsed laser deposition, fluorinated films in an ISO 7 clean room, and characterized them with XRD and four-point probe.</p></div></div>
+          <div class="ev" style="--c:var(--m2)"><div class="bus">Aug 2026</div><div class="card"><h3>Purdue SoCET</h3><p>Joined the STARS Chip Design Program (KiCAD, systemVerilog, Digital Logic, Circuitry)</p></div></div>
+          <div class="ev" style="--c:var(--diff)"><div class="bus">Sept 2026</div><div class="card"><h3>Purdue Orbital<span class="org">Propulsion Member</span></h3><p>Began onboarding for propulsion team.</p></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <div class="pads">
+      <a class="pad" href="tel:+14107821941"><span class="mono"><span class="via"></span>Phone</span><b>+1 (410) 782-1941</b></a>
+      <a class="pad" href="mailto:chian158@purdue.edu"><span class="mono"><span class="via"></span>Email</span><b>chian158@purdue.edu</b></a>
+      <a class="pad" href="https://linkedin.com/in/lucas-chiang-153822381" target="_blank" rel="noopener"><span class="mono"><span class="via"></span>LinkedIn</span><b>LinkedIn</b></a>
+      <a class="pad" href="https://lucaschiang.com" target="_blank" rel="noopener"><span class="mono"><span class="via"></span>Web</span><b>lucaschiang.com</b></a>
+    </div>
+    <a class="resume-cta" href="assets/resume.pdf" target="_blank" rel="noopener">Resume ↗</a>
+    <div class="foot mono"><span>© <span id="yr"></span> Lucas Chiang. Built as a portfolio site.</span><span id="coords2"></span></div>
+  </div>
+</footer>
+
+<script>
+document.documentElement.classList.add('js');
+document.getElementById('yr').textContent = new Date().getFullYear();
+
+/* ---- theme toggle (remembers choice when storage is available) ---- */
+(function(){
+  const root=document.documentElement, btn=document.getElementById('themeBtn');
+  let saved=null; try{saved=localStorage.getItem('lc-theme')}catch(e){}
+  if(saved) root.dataset.theme=saved;
+  const isDark=()=>root.dataset.theme? root.dataset.theme==='dark' : matchMedia('(prefers-color-scheme: dark)').matches;
+  const paint=()=>{btn.textContent=isDark()?'☀':'☾'};
+  paint();
+  btn.addEventListener('click',()=>{root.dataset.theme=isDark()?'light':'dark';try{localStorage.setItem('lc-theme',root.dataset.theme)}catch(e){}paint();window.dispatchEvent(new Event('themechange'))});
+  matchMedia('(prefers-color-scheme: dark)').addEventListener('change',()=>{paint();window.dispatchEvent(new Event('themechange'))});
+})();
+
+/* ---- image fallback: show a labeled hatched frame if a photo can't load ---- */
+document.querySelectorAll('.frame img').forEach(img=>{
+  const miss=()=>img.closest('.frame').classList.add('missing');
+  if(img.complete && img.naturalWidth===0 && img.currentSrc) miss();
+  img.addEventListener('error',miss);
+});
+
+/* ---- live die: Manhattan-routed traces, metal1 horizontal / metal2 vertical ---- */
+(function(){
+  const cv=document.getElementById('die'), ctx=cv.getContext('2d');
+  const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const G=22; let W=0,H=0,nets=[],pulses=[],col={},mx=-1e4,my=-1e4;
+  function readColors(){const s=getComputedStyle(document.documentElement);
+    ['m1','m2','via','poly','diff','fg'].forEach(k=>col[k]=s.getPropertyValue('--'+k).trim())}
+  function rnd(n){return Math.floor(Math.random()*n)}
+  function build(){
+    const r=cv.getBoundingClientRect(), dpr=Math.min(devicePixelRatio||1,2);
+    W=r.width; H=r.height; cv.width=W*dpr; cv.height=H*dpr; ctx.setTransform(dpr,0,0,dpr,0,0);
+    const C=Math.ceil(W/G)+1, R=Math.ceil(H/G)+1, occ=new Uint8Array(C*R);
+    const D=[[1,0],[0,1],[-1,0],[0,-1]]; nets=[];
+    const target=Math.floor(C*R/34);
+    for(let n=0,tries=0;n<target&&tries<target*6;tries++){
+      let x=rnd(C),y=rnd(R); if(occ[y*C+x])continue;
+      let d=rnd(4),pts=[[x,y]],len=6+rnd(26); occ[y*C+x]=1;
+      for(let i=0;i<len;i++){
+        if(Math.random()<.2) d=(d+(Math.random()<.5?1:3))%4;
+        let nx=x+D[d][0],ny=y+D[d][1];
+        if(nx<0||ny<0||nx>=C||ny>=R||occ[ny*C+nx]){d=(d+1)%4;nx=x+D[d][0];ny=y+D[d][1];
+          if(nx<0||ny<0||nx>=C||ny>=R||occ[ny*C+nx])break;}
+        x=nx;y=ny;occ[y*C+x]=1;pts.push([x,y]);
+      }
+      if(pts.length>4){nets.push(pts);n++}
+    }
+    pulses=[]; const pc=Math.min(60,Math.floor(nets.length/3));
+    for(let i=0;i<pc;i++) pulses.push(newPulse());
+  }
+  function newPulse(){const net=nets[rnd(nets.length)];return{net,t:0,v:.06+Math.random()*.12,c:[col.via,col.poly,col.diff][rnd(3)]}}
+  function near(p){const dx=p[0]*G-mx,dy=p[1]*G-my;return dx*dx+dy*dy<120*120}
+  function draw(){
+    ctx.clearRect(0,0,W,H); ctx.lineCap='square';
+    for(const pts of nets){
+      let hot=false; for(let i=0;i<pts.length;i+=2){if(near(pts[i])){hot=true;break}}
+      ctx.globalAlpha=hot?.95:.32; ctx.lineWidth=hot?3:2.2;
+      for(let i=1;i<pts.length;i++){
+        const a=pts[i-1],b=pts[i];
+        ctx.strokeStyle=a[1]===b[1]?col.m1:col.m2;
+        ctx.beginPath();ctx.moveTo(a[0]*G,a[1]*G);ctx.lineTo(b[0]*G,b[1]*G);ctx.stroke();
+      }
+      ctx.fillStyle=col.via;
+      for(let i=1;i<pts.length-1;i++){const a=pts[i-1],b=pts[i],c=pts[i+1];
+        if((a[1]===b[1])!==(b[1]===c[1])) ctx.fillRect(b[0]*G-3,b[1]*G-3,6,6);}
+      const s=pts[0],e=pts[pts.length-1]; ctx.strokeStyle=col.fg; ctx.lineWidth=1.2;
+      ctx.strokeRect(s[0]*G-5,s[1]*G-5,10,10); ctx.strokeRect(e[0]*G-5,e[1]*G-5,10,10);
+    }
+    ctx.globalAlpha=1;
+    for(const p of pulses){
+      const pts=p.net, i=Math.floor(p.t), f=p.t-i;
+      if(i>=pts.length-1)continue;
+      const a=pts[i],b=pts[i+1],x=(a[0]+(b[0]-a[0])*f)*G,y=(a[1]+(b[1]-a[1])*f)*G;
+      ctx.fillStyle=p.c; ctx.shadowColor=p.c; ctx.shadowBlur=12;
+      ctx.beginPath();ctx.arc(x,y,3.2,0,6.283);ctx.fill(); ctx.shadowBlur=0;
+    }
+  }
+  function tick(){
+    for(let k=0;k<pulses.length;k++){const p=pulses[k];p.t+=p.v;if(p.t>=p.net.length-1)pulses[k]=newPulse();}
+    draw(); requestAnimationFrame(tick);
+  }
+  const hero=document.getElementById('home'), coords=document.getElementById('coords');
+  window.addEventListener('pointermove',e=>{
+    const r=cv.getBoundingClientRect(); mx=e.clientX-r.left; my=e.clientY-r.top;
+    const X=(e.clientX*0.85).toFixed(1).padStart(6,'0'), Y=((e.clientY+scrollY)*0.85).toFixed(1).padStart(6,'0');
+    coords.textContent=`x ${X} µm · y ${Y} µm`;
+    if(reduce) draw();
+  },{passive:true});
+  hero.addEventListener('pointerleave',()=>{mx=my=-1e4; if(reduce)draw()});
+  readColors(); build();
+  if(reduce) draw(); else requestAnimationFrame(tick);
+  let rt; window.addEventListener('resize',()=>{clearTimeout(rt);rt=setTimeout(()=>{build();draw()},150)});
+  window.addEventListener('themechange',()=>{readColors();pulses.forEach(p=>p.c=[col.via,col.poly,col.diff][rnd(3)]);draw()});
+})();
+
+/* ---- timeline: clock waveform per column + drag to scroll ---- */
+(function(){
+  document.querySelectorAll('.ev').forEach(ev=>{
+    let d='M0 20'; const w=310,half=w/8;
+    for(let i=0;i<8;i++){const x=i*half; d+= i%2? ` H${x} V20` : ` H${x} V2`;} d+=` H${w}`;
+    ev.insertAdjacentHTML('afterbegin',`<svg class="clk" viewBox="0 0 ${w} 22" preserveAspectRatio="none" aria-hidden="true"><path d="${d}" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>`);
+  });
+  const t=document.getElementById('track'); let down=false,sx=0,sl=0,moved=false;
+  t.addEventListener('pointerdown',e=>{if(e.pointerType!=='mouse')return;down=true;moved=false;sx=e.clientX;sl=t.scrollLeft;t.classList.add('drag')});
+  window.addEventListener('pointermove',e=>{if(!down)return;const dx=e.clientX-sx;if(Math.abs(dx)>3)moved=true;t.scrollLeft=sl-dx});
+  window.addEventListener('pointerup',()=>{down=false;t.classList.remove('drag')});
+  t.addEventListener('wheel',e=>{if(Math.abs(e.deltaY)>Math.abs(e.deltaX)){const max=t.scrollWidth-t.clientWidth;
+    if((e.deltaY>0&&t.scrollLeft<max)||(e.deltaY<0&&t.scrollLeft>0)){t.scrollLeft+=e.deltaY;e.preventDefault()}}},{passive:false});
+  t.addEventListener('keydown',e=>{if(e.key==='ArrowRight')t.scrollLeft+=310;if(e.key==='ArrowLeft')t.scrollLeft-=310});
+})();
+
+/* ---- nav: highlight the current layer ---- */
+(function(){
+  const links=[...document.querySelectorAll('nav.layers a[href^="#"]')];
+  const io=new IntersectionObserver(es=>{es.forEach(e=>{if(e.isIntersecting){links.forEach(a=>a.classList.toggle('on',a.getAttribute('href')==='#'+e.target.id))}})},{rootMargin:'-45% 0px -50% 0px'});
+  ['home','research','experience','skills','timeline'].forEach(id=>io.observe(document.getElementById(id)));
+})();
+</script>
 </body>
 </html>
