@@ -82,6 +82,10 @@ a{color:inherit}
 .p-head .tt{flex:1;min-width:0}
 .p-head .part{font:500 .66rem var(--mono);letter-spacing:.12em;color:var(--c);text-transform:uppercase}
 .p-head h2{margin:2px 0 0;font:800 1.45rem/1.1 var(--display);letter-spacing:-.02em;text-wrap:balance}
+.p-hint{display:flex;align-items:center;gap:8px;margin:0;padding:9px 22px;border-bottom:1px solid var(--line);font:500 .72rem var(--mono);color:var(--muted);background:linear-gradient(90deg,color-mix(in srgb,var(--c) 10%,transparent),transparent)}
+.p-hint i{width:7px;height:7px;background:var(--c);transform:rotate(45deg);box-shadow:0 0 8px var(--c);animation:hintp 1.6s ease-in-out infinite}
+.p-hint kbd{font:700 .7rem var(--mono);color:var(--fg);border:1px solid var(--line);border-radius:3px;padding:0 5px}.p-hint b{color:#7dffb0}
+@keyframes hintp{50%{opacity:.3}}
 .p-close{all:unset;cursor:pointer;font:500 .72rem var(--mono);border:1px solid var(--line);padding:5px 9px;border-radius:3px;color:var(--muted)}
 .p-close:hover{color:var(--fg);border-color:var(--fg)}
 .p-close:focus-visible{outline:2px solid var(--via)}
@@ -170,6 +174,7 @@ a{color:inherit}
 <header class="hud">
   <a class="brand" href="index.html">Lucas Chiang<small>Board view · you are the electron</small></a>
   <span class="sp"></span>
+  <button class="hb" id="cardsBtn" type="button" aria-label="Open your Die Cards binder">▦<span class="t"> Cards</span> <b id="cardsN">0/24</b></button>
   <button class="hb" id="termBtn" type="button" aria-label="Open terminal (backtick key)">&gt;_<span class="t">Terminal</span><kbd>`</kbd></button>
   <a class="hb hide-sm" href="fun.html">Fun site <span aria-hidden="true">↗</span></a>
   <a class="hb" href="index.html">Classic<span class="t"> site</span> <span aria-hidden="true">↗</span></a>
@@ -183,6 +188,7 @@ a{color:inherit}
 
 <aside id="panel" aria-hidden="true" aria-labelledby="pTitle">
   <div class="p-head"><div class="chipic" id="pIcon"></div><div class="tt"><div class="part" id="pPart"></div><h2 id="pTitle"></h2></div><button class="p-close" id="pClose" type="button">esc ✕</button></div>
+  <div class="p-hint" id="pHint" hidden><i></i>There’s more inside this chip. Open the terminal <kbd>`</kbd> and type <b>enter</b>.</div>
   <div class="p-body" id="pBody"></div>
   <div class="p-foot"><a id="pFull" href="index.html">Open this section on the classic site ↗</a><a href="#" id="pNext">Next chip →</a></div>
 </aside>
@@ -196,6 +202,8 @@ a{color:inherit}
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="cards.js"></script>
+<script src="chips.js"></script>
 <script>
 (function(){
 'use strict';
@@ -342,10 +350,10 @@ function buildChips(){
     const side=bodyM;let body;
     if(c.kind==='xtal'){const can=new THREE.MeshStandardMaterial({color:0xc9ced8,metalness:.6,roughness:.25,emissive:new THREE.Color(c.c),emissiveIntensity:0});
       body=new THREE.Mesh(new THREE.CylinderGeometry(1,1,1,40),can);body.scale.set(c.w/2,2.6,c.d/2);body.position.y=1.5;
-      const cap=new THREE.Mesh(new THREE.CylinderGeometry(c.w/2*.96,c.w/2*.96,.05,40),topM);cap.scale.z=c.d/c.w;cap.position.y=2.83;grp.add(cap);c._top=topM;c._can=can}
+      const cap=new THREE.Mesh(new THREE.CylinderGeometry(c.w/2*.96,c.w/2*.96,.05,40),topM);cap.scale.z=c.d/c.w;cap.position.y=2.83;cap.userData.lid=1;grp.add(cap);c._top=topM;c._can=can}
     else if(c.kind==='usb'){const met=new THREE.MeshStandardMaterial({color:0xaeb4c2,metalness:.55,roughness:.3,emissive:new THREE.Color(c.c),emissiveIntensity:0});
       body=box(c.w,3.2,c.d,met);body.position.y=1.6;c._top=met;
-      const hole=box(1.4,1.2,c.d*.7,new THREE.MeshStandardMaterial({color:0x050507}));hole.position.set(-c.w/2+.6,1.6,0);grp.add(hole)}
+      const hole=box(1.4,1.2,c.d*.7,new THREE.MeshStandardMaterial({color:0x050507}));hole.position.set(-c.w/2+.6,1.6,0);hole.userData.lid=1;grp.add(hole)}
     else{H=c.kind==='bga'?2.2:c.kind==='rf'?1.2:1.8;
       body=new THREE.Mesh(new THREE.BoxGeometry(c.w,H,c.d),[side,side,topM,side,side,side]);body.position.y=H/2+(c.kind==='bga'?.5:.25);c._top=topM}
     body.userData.chip=c.id;grp.add(body);chipMeshes.push(body);
@@ -355,11 +363,11 @@ function buildChips(){
     if(c.kind==='soic'){for(let i=0;i<4;i++)for(const s of[-1,1]){const p=box(.6,.35,1.8,pinM);p.position.set((i-1.5)*2.4,.4,s*(c.d/2+.7));grp.add(p)}}
     if(c.kind==='sot'){for(let i=0;i<3;i++){const p=box(.9,.35,2,pinM);p.position.set((i-1)*3.4,.4,c.d/2+.9);grp.add(p)}const tab=box(c.w*.6,.35,2.2,pinM);tab.position.set(0,.4,-c.d/2-1);grp.add(tab)}
     if(c.kind==='bga'){const bm=new THREE.MeshStandardMaterial({color:0xb8bcc8,metalness:.9,roughness:.3});for(let i=0;i<8;i++)for(let j=0;j<8;j++){const b=new THREE.Mesh(new THREE.SphereGeometry(.38,8,6),bm);b.position.set((i-3.5)*1.8,.35,(j-3.5)*1.8);grp.add(b)}}
-    if(c.kind==='rf'){const sh=box(c.w*.55,2,c.d*.8,new THREE.MeshStandardMaterial({color:0xc7cbd4,metalness:1,roughness:.3}));sh.position.set(-c.w*.18,1.9,0);grp.add(sh);
+    if(c.kind==='rf'){const sh=box(c.w*.55,2,c.d*.8,new THREE.MeshStandardMaterial({color:0xc7cbd4,metalness:1,roughness:.3}));sh.position.set(-c.w*.18,1.9,0);sh.userData.lid=1;grp.add(sh);
       const am=new THREE.MeshStandardMaterial({color:0xe0a84a,metalness:.9,roughness:.3,emissive:new THREE.Color(c.c),emissiveIntensity:.0});c._ant=am;
       for(let i=0;i<5;i++){const a=box(.35,.15,c.d*.62,am);a.position.set(c.w*.18+i*1.1,1.32,0);grp.add(a);const b=box(1.1,.15,.35,am);b.position.set(c.w*.18+i*1.1+.55,1.32,(i%2?1:-1)*c.d*.31);if(i<4)grp.add(b)}}
     if(c.kind==='led'){for(let i=0;i<8;i++)for(let j=0;j<6;j++){const m=new THREE.MeshStandardMaterial({color:0x2a1206,emissive:new THREE.Color(0xff8a3c),emissiveIntensity:0,roughness:.4});
-      const l=box(1.3,.5,1.3,m);l.position.set((i-3.5)*1.75,2.05,(j-2.5)*1.75);grp.add(l);ledMats.push({m,i,j})}}
+      const l=box(1.3,.5,1.3,m);l.position.set((i-3.5)*1.75,2.05,(j-2.5)*1.75);l.userData.lid=1;grp.add(l);ledMats.push({m,i,j})}}
     c._grp=grp;
   });
   // passives for texture
@@ -407,7 +415,8 @@ function buildUI(){
 }
 
 /* ------------ motion state ------------ */
-const st={at:chipNode.home,from:null,to:null,t:0,path:[],speed:30,warp:0,warpOn:false,pending:null,stopped:true,here:'home'};
+let diving=null;
+const st={enterAfter:null,at:chipNode.home,from:null,to:null,t:0,path:[],speed:30,warp:0,warpOn:false,pending:null,stopped:true,here:'home'};
 const keys=new Set();
 function pos(){if(st.to===null){const n=nodes[st.at];return[n.x,n.z]}const A=nodes[st.from],B=nodes[st.to];return[A.x+(B.x-A.x)*st.t,A.z+(B.z-A.z)*st.t]}
 function inputDir(){let x=0,z=0;if(keys.has('left'))x-=1;if(keys.has('right'))x+=1;if(keys.has('up'))z-=1;if(keys.has('down'))z+=1;const l=Math.hypot(x,z);return l?[x/l,z/l]:null}
@@ -424,7 +433,78 @@ function travel(id,warp){
   if(reduce||(warp&&st.path.length===0)){st.at=dst;st.path=[];arrive(id);return}
   if(st.path.length)startEdge(st.path.shift());
 }
-function arrive(id){st.pending=null;st.warpOn=false;st.stopped=true;setHere(id);openPanel(id)}
+function arrive(id){st.pending=null;st.warpOn=false;st.stopped=true;setHere(id);if(st.enterAfter===id){st.enterAfter=null;dive(id)}else{st.enterAfter=null;openPanel(id)}}
+function atChip(id){return st.to===null&&nodes[st.at].chip===id}
+function enterChip(id){if(!window.LCChips||!id||!atChip(id)||diving)return;closePanel(true);dive(id)}
+const zc=document.createElement('canvas');zc.id='zoomfx';zc.setAttribute('aria-hidden','true');Object.assign(zc.style,{position:'fixed',inset:'0',width:'100%',height:'100%',zIndex:'19',pointerEvents:'none',display:'none'});document.body.appendChild(zc);const zx=zc.getContext('2d');
+let zfx=null;
+function dieTex(c){return tex(256,Math.max(96,256*c.d/c.w|0),(g,w,h)=>{g.fillStyle='#07080f';g.fillRect(0,0,w,h);
+  for(let y=10;y<h-10;y+=7){let x=10;while(x<w-10){const ww=3+Math.random()*16;g.fillStyle=Math.random()<.5?c.c+'55':'rgba(63,220,156,.3)';g.fillRect(x,y,ww-1,5);x+=ww}}
+  g.fillStyle='rgba(5,6,11,.85)';g.fillRect(w*.12,h*.18,w*.3,h*.34);g.strokeStyle=c.c;g.lineWidth=2;g.strokeRect(w*.12,h*.18,w*.3,h*.34);
+  g.strokeStyle='#e0a84a';g.lineWidth=3;g.strokeRect(3,3,w-6,h-6);for(let x=12;x<w-12;x+=14){g.fillStyle='#e0a84a';g.fillRect(x,6,6,6);g.fillRect(x,h-12,6,6)}
+  g.font='800 '+Math.round(h*.3)+'px Unbounded, Arial Black, sans-serif';g.fillStyle='rgba(236,235,245,.9)';g.textAlign='center';g.fillText('LC',w*.68,h*.62)})}
+function lidParts(c){const L=[];c._grp.children.forEach(m=>{if(m.userData.chip||m.userData.lid)L.push(m)});return L}
+function setLid(c,k){if(!c._lidBase){c._lidParts=lidParts(c);c._lidBase=c._lidParts.map(m=>({y:m.position.y,rz:m.rotation.z}))}
+  c._lidParts.forEach((m,i)=>{m.position.y=c._lidBase[i].y+k*9;m.rotation.z=c._lidBase[i].rz+k*.35;const mats=Array.isArray(m.material)?m.material:[m.material];
+    mats.forEach(mt=>{mt.transparent=k>0;mt.opacity=1-k;mt.depthWrite=k<.5})});
+  if(c._die){c._die.material.opacity=Math.min(1,k*1.4);c._die.visible=k>0.01;c._wires.material.opacity=Math.min(1,k*1.2);c._wires.visible=k>.01;c._dl.intensity=k*3}}
+function ensureDie(c){if(c._die)return;const m=new THREE.Mesh(new THREE.PlaneGeometry(c.w*.78,c.d*.78),new THREE.MeshBasicMaterial({map:dieTex(c),transparent:true,opacity:0}));
+  m.rotation.x=-Math.PI/2;m.position.y=.42;c._grp.add(m);c._die=m;
+  const pts=[];const hw=c.w*.39,hd=c.d*.39,ow=c.w/2+.6,od=c.d/2+.6;
+  for(let i=0;i<10;i++){const t=(i+.5)/10;[[-hw+t*2*hw,-hd,-ow+t*2*ow,-od],[-hw+t*2*hw,hd,-ow+t*2*ow,od],[-hw,-hd+t*2*hd,-ow,-od+t*2*od],[hw,-hd+t*2*hd,ow,-od+t*2*od]].forEach(([x0,z0,x1,z1])=>{
+    const mx=(x0+x1)/2,mz=(z0+z1)/2;pts.push(x0,.45,z0,mx,1.5,mz,mx,1.5,mz,x1,.35,z1)})}
+  const gm=new THREE.BufferGeometry();gm.setAttribute('position',new THREE.Float32BufferAttribute(pts,3));
+  c._wires=new THREE.LineSegments(gm,new THREE.LineBasicMaterial({color:0xffd27a,transparent:true,opacity:0}));c._grp.add(c._wires);
+  c._dl=new THREE.PointLight(new THREE.Color(c.c),0,40,1.5);c._dl.position.set(0,4,0);c._grp.add(c._dl)}
+function dive(id){if(diving)return;const c=byId[id];ensureDie(c);diving={id,t:0,opened:false,from:camPos.clone(),fromLook:look.clone()};zfx={mode:'in',t:0,id};zc.style.display='block';
+  $('#labels').style.opacity='0';$('#help').classList.add('fade');$('#dock').style.opacity='0';$('#dock').style.pointerEvents='none';keys.clear();zsfx('in')}
+let ZA=null;function zsfx(kind){try{if(localStorage.getItem('lc-mute')==='1')return}catch(e){}try{ZA=ZA||new (window.AudioContext||window.webkitAudioContext)();const a=ZA,n=a.currentTime;
+  const o=a.createOscillator(),g=a.createGain();o.type='sawtooth';o.frequency.setValueAtTime(kind==='in'?60:900,n);o.frequency.exponentialRampToValueAtTime(kind==='in'?1400:60,n+(kind==='in'?1.7:.6));
+  g.gain.setValueAtTime(0,n);g.gain.linearRampToValueAtTime(.035,n+.1);g.gain.exponentialRampToValueAtTime(.0001,n+(kind==='in'?1.9:.7));o.connect(g);g.connect(a.destination);o.start();o.stop(n+2)}catch(e){}}
+const MAGS=[[10,'1 mm','PKG'],[100,'100 µm','M4'],[1000,'10 µm','M3'],[10000,'1 µm','M2'],[30000,'300 nm','M1'],[100000,'100 nm','POLY']];
+function drawZoom(dt){if(!zfx)return;zfx.t+=dt;const W=innerWidth,H=innerHeight,d=Math.min(devicePixelRatio||1,2);if(zc.width!==W*d){zc.width=W*d;zc.height=H*d}
+  zx.setTransform(d,0,0,d,0,0);zx.clearRect(0,0,W,H);const c=byId[zfx.id],t=zfx.t,cx=W/2,cy=H/2;
+  let ret=0,mk=0,flash=0,slit=-1;
+  if(zfx.mode==='in'){ret=Math.max(0,Math.min(1,(t-.55)/.3))*Math.max(0,1-(t-1.95)/.25);mk=Math.max(0,Math.min(1,(t-.7)/.95));flash=t>1.5?Math.max(0,1-Math.abs(t-1.72)/.28):0;slit=t>1.58&&t<2.08?(t-1.58)/.5:-1;
+    if(t>2.25){zfx=null;zc.style.display='none';return}}
+  else{ret=Math.max(0,1-t/.75);mk=Math.max(0,1-t/.6);if(t>.8){zfx=null;zc.style.display='none';return}}
+  const col=c.c;
+  if(ret>0){zx.globalAlpha=ret;
+    // vignette + reticle
+    const vg=zx.createRadialGradient(cx,cy,Math.min(W,H)*.25,cx,cy,Math.max(W,H)*.7);vg.addColorStop(0,'rgba(0,0,0,0)');vg.addColorStop(1,'rgba(0,0,0,.75)');zx.fillStyle=vg;zx.fillRect(0,0,W,H);
+    zx.strokeStyle=col;zx.lineWidth=1.2;const R=Math.min(W,H)*.32;
+    [1,.66,.33].forEach((f,i)=>{zx.setLineDash(i?[4,6]:[]);zx.beginPath();zx.arc(cx,cy,R*f,0,6.283);zx.stroke()});zx.setLineDash([]);
+    zx.beginPath();zx.moveTo(cx-R*1.25,cy);zx.lineTo(cx-18,cy);zx.moveTo(cx+18,cy);zx.lineTo(cx+R*1.25,cy);zx.moveTo(cx,cy-R*1.25);zx.lineTo(cx,cy-18);zx.moveTo(cx,cy+18);zx.lineTo(cx,cy+R*1.25);zx.stroke();
+    for(let i=-10;i<=10;i++){const l=i%5?6:12;zx.beginPath();zx.moveTo(cx+i*R/10,cy-l);zx.lineTo(cx+i*R/10,cy+l);zx.stroke()}
+    const rot=t*.6;zx.save();zx.translate(cx,cy);zx.rotate(rot);for(let i=0;i<4;i++){zx.rotate(Math.PI/2);zx.beginPath();zx.moveTo(R*1.05,-8);zx.lineTo(R*1.15,0);zx.lineTo(R*1.05,8);zx.stroke()}zx.restore();
+    // readouts
+    const lg=Math.log10(10)+mk*4,mag=Math.pow(10,lg);let mi=0;for(let i=0;i<MAGS.length;i++)if(mag>=MAGS[i][0]*.95)mi=i;
+    zx.font='700 '+Math.max(22,Math.min(44,W*.035))+'px "Unbounded","Arial Black",sans-serif';zx.fillStyle='#ecebf5';zx.textAlign='left';
+    const mtxt=Math.round(mag).toLocaleString()+'×';zx.fillText(mtxt,32,H-74);
+    zx.font='500 12px "JetBrains Mono",monospace';zx.fillStyle=col;zx.fillText(`MAGNIFICATION · ${c.part}`,32,H-112);
+    const sb=120;zx.fillStyle='#ecebf5';zx.fillRect(32,H-56,sb,3);zx.fillRect(32,H-62,2,15);zx.fillRect(32+sb-2,H-62,2,15);zx.fillText(MAGS[mi][1],32+sb+12,H-49);
+    zx.textAlign='right';zx.fillStyle=col;zx.fillText('LAYER',W-32,H-112);zx.font='700 '+Math.max(22,Math.min(44,W*.035))+'px "Unbounded","Arial Black",sans-serif';zx.fillStyle='#ecebf5';zx.fillText(MAGS[mi][2],W-32,H-74);
+    zx.font='500 11px "JetBrains Mono",monospace';zx.fillStyle='rgba(236,235,245,.6)';zx.fillText(`STAGE X ${(c.x*1000).toFixed(0)} µm · Y ${(c.z*1000).toFixed(0)} µm · FOCUS ${(mk*100).toFixed(1)}%`,W-32,H-49);zx.textAlign='left';
+    zx.globalAlpha=1}
+  if(flash>0){zx.fillStyle=`rgba(150,110,255,${flash*.85})`;zx.fillRect(0,0,W,H);
+    zx.strokeStyle=`rgba(255,255,255,${flash*.35})`;zx.lineWidth=1;const s=18;for(let x=(t*400)%s;x<W;x+=s){zx.beginPath();zx.moveTo(x,0);zx.lineTo(x,H);zx.stroke()}for(let y=0;y<H;y+=s*2){zx.fillStyle=`rgba(255,255,255,${flash*.12})`;zx.fillRect(0,y,W,s*.5)}}
+  if(slit>=0){const x=slit*(W+200)-100;const gr=zx.createLinearGradient(x-90,0,x+20,0);gr.addColorStop(0,'rgba(190,160,255,0)');gr.addColorStop(.8,'rgba(210,190,255,.75)');gr.addColorStop(1,'rgba(255,255,255,1)');zx.fillStyle=gr;zx.fillRect(x-90,0,110,H)}
+}
+const chipHooks={
+  read:id=>openPanel(id),panelOpen:()=>panel.classList.contains('open'),
+  exit:()=>{const id=diving&&diving.id;diving=null;closePanel(true);if(!id)return;const c=byId[id];zfx={mode:'out',t:0,id};zc.style.display='block';zsfx('out');
+    camPos.set(c.x,6,c.z+3);look.set(c.x,0,c.z);cam.fov=80;cam.updateProjectionMatrix();
+    let k=1;const t0=performance.now();(function f(n){k=Math.max(0,1-(n-t0)/650);setLid(c,k*k);if(k>0)requestAnimationFrame(f)})(t0);
+    $('#labels').style.opacity='';$('#dock').style.opacity='';$('#dock').style.pointerEvents='';openPanel(id)},
+  roles:()=>{const fb=[['SoCET','STARS Chip Design'],['Orbital','Propulsion DAQ'],['UMBC','Wearable Electronics'],['Towson','Thin Films Intern'],['GMU · NASA','Data Science Intern'],['Swim','Swim Instructor'],['FTC 18996','Design & Outreach'],['River Hill','Student Leadership']].map(([k,d])=>({k,d,full:k+' — '+d}));
+    if(!DOC)return fb;const KEY=[[/SoCET/,'SoCET'],[/Orbital/,'Orbital'],[/Wearable/,'UMBC'],[/Thin Films/,'Towson'],[/NASA/,'GMU · NASA'],[/Swim/,'Swim'],[/18996/,'FTC 18996'],[/Student Leadership/,'River Hill']];
+    const out=[...DOC.querySelectorAll('#experience .role h3')].map(h=>{const full=h.textContent.replace(/\s+/g,' ').trim();const m=KEY.find(([r])=>r.test(full));if(!m)return null;let d=full.split(/ — | - /)[0];if(d.length>24)d=d.slice(0,23)+'…';return{k:m[1],d,full}}).filter(Boolean);
+    return out.length>=8?out.slice(0,8):fb},
+  stops:()=>{const fb=[['Sep 2020','Design & Outreach Leader'],['Sep 2022','Student Leadership Begins'],['Jun 2023','Swim Instructor'],['Summer 2024','NASA Research Intern'],['Jul 2025','Wearable Thermoelectrics'],['Jul 2025','CMO Thin Film Research'],['Aug 2026','Purdue SoCET'],['Sept 2026','Purdue Orbital']].map(([d,t])=>({d,t}));
+    if(!DOC)return fb;const o=[...DOC.querySelectorAll('#timeline .ev')].map(e=>({d:e.querySelector('.bus').textContent.trim(),t:(e.querySelector('h3').firstChild||{}).textContent.trim()}));return o.length?o.slice(0,8):fb},
+  contacts:()=>{const fb=[{k:'PHONE',v:'+1 (410) 782-1941'},{k:'EMAIL',v:'chian158@purdue.edu'},{k:'LINKEDIN',v:'in/lucas-chiang'}];
+    if(!DOC)return fb;const o=[...DOC.querySelectorAll('footer .pad')].map(p=>({k:p.querySelector('.mono').textContent.trim().toUpperCase(),v:p.querySelector('b').textContent.trim(),h:p.getAttribute('href')})).filter(p=>p.k!=='WEB').map(p=>p.k==='LINKEDIN'?{k:p.k,v:'in/'+(p.h.split('/in/')[1]||'').replace(/-\d+\/?$/,'')}:p);return o.length?o.slice(0,3):fb}
+};
 function setHere(id){st.here=id;Object.entries(labels).forEach(([k,d])=>d.classList.toggle('here',k===id));$$('#dock button').forEach(b=>b.classList.toggle('on',b.dataset.chip===id));
   $('#locNet').textContent=id?byId[id].part:'TRACE';$('#locV').textContent=id?byId[id].v:'—'}
 
@@ -450,6 +530,14 @@ function step(dt){
 /* ------------ camera ------------ */
 let pShift=0,camD=coarse?92:74,camYaw=0,mouseX=0,mouseY=0,intro=reduce?0:1;const camPos=new THREE.Vector3(),look=new THREE.Vector3();
 function updateCam(dt,p){
+  if(diving){const c=byId[diving.id];diving.t+=reduce?10:dt;const t=diving.t,E=x=>x*x*(3-2*x),cl=x=>Math.max(0,Math.min(1,x));
+    const a=E(cl(t/.7)),b=cl((t-.7)/.95),bi=b*b*b;
+    setLid(c,E(cl((t-.15)/.6)));
+    const P1=new THREE.Vector3(c.x,30,c.z+12),P2=new THREE.Vector3(c.x,.9,c.z+.04);
+    if(t<.7)camPos.copy(diving.from).lerp(P1,a);else camPos.copy(P1).lerp(P2,bi);
+    look.copy(diving.fromLook).lerp(new THREE.Vector3(c.x,0,c.z),a);cam.position.copy(camPos);cam.lookAt(look);
+    const f=48+bi*70;if(Math.abs(cam.fov-f)>.05){cam.fov=f;cam.updateProjectionMatrix()}
+    if(t>=1.75&&!diving.opened){diving.opened=true;LCChips.open(diving.id,chipHooks)}return}
   const w=st.warp,D=camD*(1-w*.25);
   const ox=Math.sin(camYaw)*D*.62+mouseX*4,oz=Math.cos(camYaw)*D*.62+mouseY*3;
   const shx=pShift*D*.24*Math.cos(camYaw),shz=-pShift*D*.24*Math.sin(camYaw);
@@ -499,8 +587,8 @@ function frame(now){
   CHIPS.forEach(c=>{const h=c.kind==='bga'||c.kind==='xtal'||c.kind==='usb'?7.5:6.5;v3.set(c.x,h,c.z).project(cam);const d=labels[c.id];
     if(v3.z>1){d.style.display='none';return}d.style.display='';d.style.left=((v3.x+1)/2*W)+'px';d.style.top=((1-v3.y)/2*H)+'px';
     d.classList.toggle('far',Math.hypot(c.x-p[0],c.z-p[1])>70)});
-  drawWarp(dt);
-  R.render(scene,cam);
+  drawWarp(dt);drawZoom(dt);
+  if(!(diving&&diving.opened&&!zfx&&window.LCChips&&LCChips.isOpen()))R.render(scene,cam);
   requestAnimationFrame(frame);
 }
 function resize(){const w=innerWidth,h=innerHeight;R.setSize(w,h,false);cam.aspect=w/h;cam.updateProjectionMatrix();wc.width=w*devicePixelRatio;wc.height=h*devicePixelRatio}
@@ -509,6 +597,7 @@ function resize(){const w=innerWidth,h=innerHeight;R.setSize(w,h,false);cam.aspe
 const KM={ArrowUp:'up',KeyW:'up',ArrowDown:'down',KeyS:'down',ArrowLeft:'left',KeyA:'left',ArrowRight:'right',KeyD:'right'};
 function typing(){const a=document.activeElement;return a&&/INPUT|TEXTAREA/.test(a.tagName)}
 addEventListener('keydown',e=>{
+  if(window.LCChips&&LCChips.isOpen())return;if(window.LCCards&&LCCards.isOpen())return;if(diving)return;
   if((e.key==='`'||e.key==='~'||e.code==='Backquote')&&!e.metaKey&&!e.ctrlKey&&!e.altKey){e.preventDefault();toggleTerm();return}
   if(e.key==='Escape'){if(term.classList.contains('open'))closeTerm();else closePanel();return}
   if(typing())return;
@@ -570,10 +659,13 @@ function openPanel(id){
     if(!DOC&&id!=='resume'){body.innerHTML=`<p>Couldn’t load this section here.</p><div class="cta"><a class="pri" href="${full}">Open it on the site ↗</a></div>`;return}
     try{body.innerHTML=R_[id](s=>DOC.querySelector(s))}catch(e){body.innerHTML=`<div class="cta"><a class="pri" href="${full}">Open it on the site ↗</a></div>`}
     body.scrollTop=0;body.querySelectorAll('[data-go]').forEach(a=>a.addEventListener('click',ev=>{ev.preventDefault();travel(a.dataset.go)}))});
+  const ph=$('#pHint');if(ph){ph.hidden=!(window.LCChips&&!LCChips.isOpen()&&atChip(id))}
   panel.classList.add('open');panel.setAttribute('aria-hidden','false');
 }
 function closePanel(silent){if(!panel.classList.contains('open'))return;panel.classList.remove('open');panel.setAttribute('aria-hidden','true');openId=null}
 $('#pClose').addEventListener('click',()=>closePanel());
+$('#cardsBtn').addEventListener('click',()=>window.LCCards&&LCCards.binder());
+const cardsN=()=>{if(window.LCCards)$('#cardsN').textContent=LCCards.owned()+'/'+LCCards.total};cardsN();if(window.LCCards)LCCards.onChange(cardsN);
 $('#pNext').addEventListener('click',e=>{e.preventDefault();const i=ORDER.indexOf(openId||st.here||'home');travel(ORDER[(i+1)%ORDER.length])});
 
 /* ------------ toast ------------ */
@@ -589,15 +681,20 @@ function closeTerm(){term.classList.remove('open');term.setAttribute('aria-hidde
 function toggleTerm(){term.classList.contains('open')?closeTerm():openTerm()}
 $('#termBtn').addEventListener('click',toggleTerm);$('#termClose').addEventListener('click',closeTerm);
 const CMD={
-  help:()=>print('<span class="p">lightspeed &lt;chip&gt;</span>  warp to a chip (also: warp, ls)\n<span class="p">go &lt;chip&gt;</span>          ride the traces there\n<span class="p">chips</span>               list every chip\n<span class="p">whereami</span>  <span class="p">resume</span>  <span class="p">classic</span>  <span class="p">fun</span>  <span class="p">clear</span>  <span class="p">exit</span>\nchips: home research experience skills timeline play contact resume'),
+  help:()=>print('<span class="p">lightspeed &lt;chip&gt;</span>  warp to a chip (also: warp, ls)\n<span class="p">go &lt;chip&gt;</span>          ride the traces there\n<span class="p">enter</span>               go inside the chip you’re parked on\n<span class="p">cards</span>               open your Die Cards binder\n<span class="p">chips</span>               list every chip\n<span class="p">whereami</span>  <span class="p">resume</span>  <span class="p">classic</span>  <span class="p">fun</span>  <span class="p">clear</span>  <span class="p">exit</span>\nchips: home research experience skills timeline play contact resume'),
   lightspeed:a=>{const id=ALIAS[(a||'').toLowerCase()];if(!id){print('lightspeed: pick a chip · try <span class="p">lightspeed skills</span>','d');return}print('engaging lightspeed → '+byId[id].sec,'d');setTimeout(()=>{closeTerm();travel(id,true)},250)},
   go:a=>{const id=ALIAS[(a||'').toLowerCase()];if(!id){print('go: unknown chip','d');return}closeTerm();travel(id)},
   chips:()=>print(CHIPS.map(c=>`<span class="p">${('U'+c.key).padEnd(4)}</span>${c.id.padEnd(12)}${c.name}  ·  ${c.sec}`).join('\n')),
   whereami:()=>{const [x,z]=pos();print(`x ${x.toFixed(1)} mm  z ${z.toFixed(1)} mm  ·  ${st.here?byId[st.here].name:'on a trace'}`,'d')},
   resume:()=>print('<a href="assets/resume.pdf" target="_blank" rel="noopener" style="color:#7dffb0">open resume.pdf ↗</a>'),
+  enter:a=>{const here=st.to===null?nodes[st.at].chip:null;
+    if(!here){print('enter: no chip under the electron. Ride to a chip and stop on it first.','d');return}
+    const want=ALIAS[(a||'').toLowerCase()];if(a&&want&&want!==here){print(`enter: you’re parked on ${byId[here].name}. Ride to ${byId[want].name} first.`,'d');return}
+    print(`decapping ${byId[here].part} …`,'d');setTimeout(()=>{closeTerm();enterChip(here)},280)},
+  cards:()=>{closeTerm();window.LCCards&&LCCards.binder()},
   classic:()=>{location.href='index.html'},fun:()=>{location.href='fun.html'},
   clear:()=>{out.innerHTML=''},exit:()=>closeTerm()
-};CMD.warp=CMD.lightspeed;CMD.ls=CMD.lightspeed;CMD.cd=CMD.go;
+};CMD.binder=CMD.cards;CMD.warp=CMD.lightspeed;CMD.ls=CMD.lightspeed;CMD.cd=CMD.go;
 $('#termForm').addEventListener('submit',e=>{e.preventDefault();const v=inp.value.trim();inp.value='';if(!v)return;hist.push(v);hi=hist.length;print('<span class="p">$</span> '+esc(v));
   const [c,...a]=v.split(/\s+/);const f=CMD[c.toLowerCase()];f?f(a.join(' ')):(ALIAS[c.toLowerCase()]?CMD.lightspeed(c):print(esc(c)+': command not found · try help','d'))});
 inp.addEventListener('keydown',e=>{if(e.key==='ArrowUp'&&hi>0){inp.value=hist[--hi];e.preventDefault()}else if(e.key==='ArrowDown'){hi=Math.min(hist.length,hi+1);inp.value=hist[hi]||'';e.preventDefault()}
