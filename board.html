@@ -174,7 +174,7 @@ a{color:inherit}
 <header class="hud">
   <a class="brand" href="index.html">Lucas Chiang<small>Board view · you are the electron</small></a>
   <span class="sp"></span>
-  <button class="hb" id="cardsBtn" type="button" aria-label="Open your Die Cards binder">▦<span class="t"> Cards</span> <b id="cardsN">0/24</b></button>
+  <button class="hb" id="cardsBtn" type="button" aria-label="Open your Die Cards binder">▦<span class="t"> Cards</span> <b id="cardsN">0/150</b></button>
   <button class="hb" id="termBtn" type="button" aria-label="Open terminal (backtick key)">&gt;_<span class="t">Terminal</span><kbd>`</kbd></button>
   <a class="hb hide-sm" href="fun.html">Fun site <span aria-hidden="true">↗</span></a>
   <a class="hb" href="index.html">Classic<span class="t"> site</span> <span aria-hidden="true">↗</span></a>
@@ -664,8 +664,8 @@ function openPanel(id){
 }
 function closePanel(silent){if(!panel.classList.contains('open'))return;panel.classList.remove('open');panel.setAttribute('aria-hidden','true');openId=null}
 $('#pClose').addEventListener('click',()=>closePanel());
-$('#cardsBtn').addEventListener('click',()=>window.LCCards&&LCCards.binder());
-const cardsN=()=>{if(window.LCCards)$('#cardsN').textContent=LCCards.owned()+'/'+LCCards.total};cardsN();if(window.LCCards)LCCards.onChange(cardsN);
+$('#cardsBtn').addEventListener('click',()=>window.LCCards&&(LCCards.pending()?LCCards.openNext():LCCards.binder()));
+const cardsN=()=>{if(!window.LCCards)return;const n=LCCards.pending();$('#cardsN').textContent=LCCards.owned()+'/'+LCCards.total+(n?` · ${n} pack${n>1?'s':''}`:'')};cardsN();if(window.LCCards)LCCards.onChange(cardsN);
 $('#pNext').addEventListener('click',e=>{e.preventDefault();const i=ORDER.indexOf(openId||st.here||'home');travel(ORDER[(i+1)%ORDER.length])});
 
 /* ------------ toast ------------ */

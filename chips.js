@@ -68,7 +68,7 @@ const stl=document.createElement('style');stl.textContent=css;document.head.appe
 const root=document.createElement('section');root.id='lcDie';root.hidden=true;root.setAttribute('role','dialog');root.setAttribute('aria-label','Inside the chip');
 root.innerHTML=`<canvas class="die-bg" aria-hidden="true"></canvas><div class="die-ui">
  <div class="die-top"><div class="die-id"><div class="part" id="dPart"></div><h2 id="dName"></h2><div class="sec" id="dSec"></div></div>
-  <div class="die-btns"><button class="db" type="button" data-a="read">Read section</button><button class="db" type="button" data-a="cards"><span class="t">Cards </span><span id="dCards">0/24</span></button><button class="db" type="button" data-a="exit">Exit chip <span class="t">⎋</span></button></div></div>
+  <div class="die-btns"><button class="db" type="button" data-a="read">Read section</button><button class="db" type="button" data-a="cards"><span class="t">Cards </span><span id="dCards">0/150</span></button><button class="db" type="button" data-a="exit">Exit chip <span class="t">⎋</span></button></div></div>
  <div class="die-core"><div class="core-frame" id="dFrame"><span class="core-lab" id="dLab"></span><span class="cn tl"></span><span class="cn tr"></span><span class="cn bl"></span><span class="cn br"></span>
    <canvas id="dGame" aria-label="Minigame"></canvas>
    <div class="g-ovl" id="dOvl"><div class="g-card"><div class="g-tag" id="gTag">Minigame</div><h3 id="gTitle"></h3><p id="gHow"></p><ul class="g-keys" id="gKeys"></ul><div class="g-res" id="gRes" hidden></div>
@@ -359,12 +359,13 @@ const pointerFine=matchMedia('(pointer: fine)').matches;
 function bestKey(id){return 'lc-best-'+id}
 function sizeGame(){const r=gcv.getBoundingClientRect(),d=Math.min(devicePixelRatio||1,2);gcv.width=Math.round(r.width*d);gcv.height=Math.round(r.height*d);gx.setTransform(gcv.width/LW,0,0,gcv.height/LH,0,0)}
 function cardsCount(){const n=window.LCCards?LCCards.owned():0,tot=window.LCCards?LCCards.total:24;$('#dCards').textContent=`${n}/${tot}`}
-if(window.LCCards)LCCards.onChange(cardsCount);
+if(window.LCCards)LCCards.onChange(()=>{cardsCount();if(!root.hidden&&state!=='play'&&cur)intro(lastRes)});
 let AC=null;function sfx(kind){try{if(store.get('lc-mute')==='1')return;AC=AC||new (window.AudioContext||window.webkitAudioContext)();const o=AC.createOscillator(),g=AC.createGain();
   const m={ok:[880,1320,.12,'triangle'],bad:[180,90,.16,'square'],tick:[1200,900,.04,'triangle']}[kind]||[600,600,.05,'sine'];o.type=m[3];o.frequency.setValueAtTime(m[0],AC.currentTime);o.frequency.exponentialRampToValueAtTime(m[1],AC.currentTime+m[2]);
   g.gain.setValueAtTime(.05,AC.currentTime);g.gain.exponentialRampToValueAtTime(.0001,AC.currentTime+m[2]);o.connect(g);g.connect(AC.destination);o.start();o.stop(AC.currentTime+m[2]+.02)}catch(e){}}
 
-function intro(res){
+let lastRes=null;
+function intro(res){lastRes=res||null;
   const def=GAMES[cur],c=CHIP[cur];$('#gTag').textContent=res?(res.win?'Chip verified':'Run complete'):`${c.u} · minigame`;$('#gTitle').textContent=res?res.head:def.title;
   $('#gHow').textContent=res?'':def.how;$('#gHow').hidden=!!res;
   $('#gKeys').innerHTML=res?'':def.keys.map(k=>`<li>${k}</li>`).join('');
@@ -372,13 +373,13 @@ function intro(res){
   const B=$('#gBtns');B.innerHTML='';
   const btn=(label,cls,fn)=>{const b=document.createElement('button');b.type='button';b.className='db'+(cls?' '+cls:'');b.innerHTML=label;b.addEventListener('click',fn);B.appendChild(b);return b};
   let first;
-  if(res&&res.win&&window.LCCards)first=btn('Open your pack →','pri',()=>{LCCards.openPack(cur,`${c.u} · ${c.tag}`,c.c)});
-  const play=btn(res?'Play again':'Play','pri'+(res&&res.win?'':''),start);if(res&&res.win)play.className='db';
+  const np=window.LCCards?LCCards.pending():0;if(np)first=btn(np>1?`Open pack (${np}) →`:'Open your pack →','pri',e=>{e.currentTarget.remove();LCCards.setOnClose(()=>{if(!root.hidden&&state!=='play')intro(lastRes)});LCCards.openNext()});
+  const play=btn(res?'Play again':'Play','pri',start);if(np)play.className='db';
   first=first||play;
   if(cur==='resume')btn('Open resume (PDF) ↗','',()=>window.open('assets/resume.pdf','_blank','noopener'));
   if(def.extra==='binder'&&window.LCCards)btn('Open binder','',()=>LCCards.binder());
   btn('Read section instead','',()=>hooks&&hooks.read(cur));
-  const best=store.get(bestKey(cur));$('#gBest').textContent=best?`Best: ${best}`:(cur==='play'?'I collect trading cards, so this board has a set of its own: win any chip’s minigame to earn a pack of LC-2030 Die Cards.':'Win to earn a pack of LC-2030 Die Cards.');
+  const best=store.get(bestKey(cur));$('#gBest').textContent=(best?`Best: ${best} · `:'')+(cur==='play'?'I collect trading cards, so this board has a set of its own: 150 LC-2030 Die Cards (and a couple nobody has seen). Each win earns one pack.':'Each win earns one pack of LC-2030 Die Cards.');
   $('#dOvl').hidden=false;setTimeout(()=>first.focus({preventScroll:true}),50);
   drawIdle();
 }
@@ -388,6 +389,7 @@ function start(){
   const api={color:CHIP[cur].c,pointerFine,kb:()=>kbUsed,sfx,
     hud:(l,r)=>{$('#dLab').textContent=`${CHIP[cur].u} · ${def.title} · ${l} · ${r}`},
     end:(win,head,detail,score,unit,lowerBetter)=>{if(ended)return;ended=true;state='done';
+      if(win&&window.LCCards){const c=CHIP[cur];LCCards.grant(cur,`${c.u} · ${c.tag}`,c.c)}
       if(win&&score!=null){const k=bestKey(cur),prev=store.get(k);const pv=prev?parseFloat(prev):null;if(pv==null||(lowerBetter?score<pv:score>pv))store.set(k,score+(unit||''))}
       setTimeout(()=>intro({win,head,detail}),250)},
     roles:()=>hooks.roles(),stops:()=>hooks.stops(),contacts:()=>hooks.contacts()};
