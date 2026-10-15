@@ -1013,7 +1013,7 @@ function seg7(c,d,x,y,s,on,off){// draw digit d at x,y with scale s (60x100 unit
   const secs={home:'home',research:'research',experience:'experience',skills:'skills',timeline:'timeline',play:'play'};
   const go=id=>{close();document.getElementById(id).scrollIntoView({behavior:reduce?'auto':'smooth'})};
   const C={
-    help:()=>print('commands: <span class="p">lightspeed &lt;section&gt;  board  classic  whoami  education  research  experience  skills  timeline  contact  resume  play  aim  hoops  ls  cd &lt;section&gt;  theme  clear  exit</span>'),
+    help:()=>print('commands: <span class="p">game  lightspeed &lt;section&gt;  board  classic  whoami  education  research  experience  skills  timeline  contact  resume  play  aim  hoops  ls  cd &lt;section&gt;  theme  clear  exit</span>'),
     whoami:()=>print(esc(txt($('.lede'))+'\n\n'+txt($('.bio')))),
     education:()=>print(esc($$('.edu p').map(txt).join('\n\n'))),
     research:()=>print($$('#research .proj').map(p=>'<span class="p">▸ '+esc(txt(p.querySelector('h3')))+'</span>\n  <span class="d">'+esc(txt(p.querySelector('.meta')))+'</span>').join('\n')),
@@ -1023,6 +1023,8 @@ function seg7(c,d,x,y,s,on,off){// draw digit d at x,y with scale s (60x100 unit
     contact:()=>print($$('.pad').map(p=>esc(txt(p.querySelector('.mono')).padEnd(9))+'<a href="'+p.getAttribute('href')+'" target="_blank" rel="noopener">'+esc(txt(p.querySelector('b')))+'</a>').join('\n')),
     resume:()=>print('<a href="assets/resume.pdf" target="_blank" rel="noopener">open resume.pdf ↗</a>'),
     play:()=>go('play'),
+    game:()=>{print('inserting coin…','d');setTimeout(()=>{location.href='arcade.html'},300)},
+    arcade:()=>{location.href='arcade.html'},
     board:()=>{location.href='board.html'},
     '3d':()=>{location.href='board.html'},
     classic:()=>{location.href='index.html'},
