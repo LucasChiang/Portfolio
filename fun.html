@@ -629,6 +629,7 @@ footer{padding-block:clamp(56px,8vw,96px) 40px;overflow:hidden}
   <form class="term-in" id="termForm" autocomplete="off"><label for="termIn">lucas@purdue:~$</label><input id="termIn" spellcheck="false" autocapitalize="off" aria-label="Terminal command"></form>
 </div>
 
+<script src="achievements.js"></script>
 <script>
 (function(){
 'use strict';
@@ -1013,7 +1014,7 @@ function seg7(c,d,x,y,s,on,off){// draw digit d at x,y with scale s (60x100 unit
   const secs={home:'home',research:'research',experience:'experience',skills:'skills',timeline:'timeline',play:'play'};
   const go=id=>{close();document.getElementById(id).scrollIntoView({behavior:reduce?'auto':'smooth'})};
   const C={
-    help:()=>print('commands: <span class="p">game  lightspeed &lt;section&gt;  board  classic  whoami  education  research  experience  skills  timeline  contact  resume  play  aim  hoops  ls  cd &lt;section&gt;  theme  clear  exit</span>'),
+    help:()=>print('commands: <span class="p">game  trophies  lightspeed &lt;section&gt;  board  classic  whoami  education  research  experience  skills  timeline  contact  resume  play  aim  hoops  ls  cd &lt;section&gt;  theme  clear  exit</span>'),
     whoami:()=>print(esc(txt($('.lede'))+'\n\n'+txt($('.bio')))),
     education:()=>print(esc($$('.edu p').map(txt).join('\n\n'))),
     research:()=>print($$('#research .proj').map(p=>'<span class="p">▸ '+esc(txt(p.querySelector('h3')))+'</span>\n  <span class="d">'+esc(txt(p.querySelector('.meta')))+'</span>').join('\n')),
@@ -1024,6 +1025,7 @@ function seg7(c,d,x,y,s,on,off){// draw digit d at x,y with scale s (60x100 unit
     resume:()=>print('<a href="assets/resume.pdf" target="_blank" rel="noopener">open resume.pdf ↗</a>'),
     play:()=>go('play'),
     game:()=>{print('inserting coin…','d');setTimeout(()=>{location.href='arcade.html'},300)},
+    trophies:()=>{print('opening the trophy case…','d');setTimeout(()=>{location.href='trophies.html'},250)},
     arcade:()=>{location.href='arcade.html'},
     board:()=>{location.href='board.html'},
     '3d':()=>{location.href='board.html'},

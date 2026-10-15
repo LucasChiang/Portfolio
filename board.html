@@ -202,6 +202,7 @@ a{color:inherit}
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="achievements.js"></script>
 <script src="cards.js"></script>
 <script src="chips.js"></script>
 <script>
@@ -456,7 +457,7 @@ function ensureDie(c){if(c._die)return;const m=new THREE.Mesh(new THREE.PlaneGeo
   const gm=new THREE.BufferGeometry();gm.setAttribute('position',new THREE.Float32BufferAttribute(pts,3));
   c._wires=new THREE.LineSegments(gm,new THREE.LineBasicMaterial({color:0xffd27a,transparent:true,opacity:0}));c._grp.add(c._wires);
   c._dl=new THREE.PointLight(new THREE.Color(c.c),0,40,1.5);c._dl.position.set(0,4,0);c._grp.add(c._dl)}
-function dive(id){if(diving)return;const c=byId[id];ensureDie(c);diving={id,t:0,opened:false,from:camPos.clone(),fromLook:look.clone()};zfx={mode:'in',t:0,id};zc.style.display='block';
+function dive(id){if(diving)return;try{const k='lc-decap',v=JSON.parse(localStorage.getItem(k)||'[]');if(!v.includes(id)){v.push(id);localStorage.setItem(k,JSON.stringify(v))}if(v.length>=CHIPS.length&&window.LCAch)LCAch.unlock('decap')}catch(e){}const c=byId[id];ensureDie(c);diving={id,t:0,opened:false,from:camPos.clone(),fromLook:look.clone()};zfx={mode:'in',t:0,id};zc.style.display='block';
   $('#labels').style.opacity='0';$('#help').classList.add('fade');$('#dock').style.opacity='0';$('#dock').style.pointerEvents='none';keys.clear();zsfx('in')}
 let ZA=null;function zsfx(kind){try{if(localStorage.getItem('lc-mute')==='1')return}catch(e){}try{ZA=ZA||new (window.AudioContext||window.webkitAudioContext)();const a=ZA,n=a.currentTime;
   const o=a.createOscillator(),g=a.createGain();o.type='sawtooth';o.frequency.setValueAtTime(kind==='in'?60:900,n);o.frequency.exponentialRampToValueAtTime(kind==='in'?1400:60,n+(kind==='in'?1.7:.6));
@@ -681,8 +682,8 @@ function closeTerm(){term.classList.remove('open');term.setAttribute('aria-hidde
 function toggleTerm(){term.classList.contains('open')?closeTerm():openTerm()}
 $('#termBtn').addEventListener('click',toggleTerm);$('#termClose').addEventListener('click',closeTerm);
 const CMD={
-  help:()=>print('<span class="p">lightspeed &lt;chip&gt;</span>  warp to a chip (also: warp, ls)\n<span class="p">go &lt;chip&gt;</span>          ride the traces there\n<span class="p">enter</span>               go inside the chip you’re parked on\n<span class="p">cards</span>               open your Die Cards binder\n<span class="p">game</span>                open the LC Arcade\n<span class="p">chips</span>               list every chip\n<span class="p">whereami</span>  <span class="p">resume</span>  <span class="p">classic</span>  <span class="p">fun</span>  <span class="p">clear</span>  <span class="p">exit</span>\nchips: home research experience skills timeline play contact resume'),
-  lightspeed:a=>{const id=ALIAS[(a||'').toLowerCase()];if(!id){print('lightspeed: pick a chip · try <span class="p">lightspeed skills</span>','d');return}print('engaging lightspeed → '+byId[id].sec,'d');setTimeout(()=>{closeTerm();travel(id,true)},250)},
+  help:()=>print('<span class="p">lightspeed &lt;chip&gt;</span>  warp to a chip (also: warp, ls)\n<span class="p">go &lt;chip&gt;</span>          ride the traces there\n<span class="p">enter</span>               go inside the chip you’re parked on\n<span class="p">cards</span>               open your Die Cards binder\n<span class="p">game</span>                open the LC Arcade\n<span class="p">trophies</span>            open the trophy case\n<span class="p">chips</span>               list every chip\n<span class="p">whereami</span>  <span class="p">resume</span>  <span class="p">classic</span>  <span class="p">fun</span>  <span class="p">clear</span>  <span class="p">exit</span>\nchips: home research experience skills timeline play contact resume'),
+  lightspeed:a=>{const id=ALIAS[(a||'').toLowerCase()];if(!id){print('lightspeed: pick a chip · try <span class="p">lightspeed skills</span>','d');return}print('engaging lightspeed → '+byId[id].sec,'d');window.LCAch&&LCAch.unlock('lightspeed');setTimeout(()=>{closeTerm();travel(id,true)},250)},
   go:a=>{const id=ALIAS[(a||'').toLowerCase()];if(!id){print('go: unknown chip','d');return}closeTerm();travel(id)},
   chips:()=>print(CHIPS.map(c=>`<span class="p">${('U'+c.key).padEnd(4)}</span>${c.id.padEnd(12)}${c.name}  ·  ${c.sec}`).join('\n')),
   whereami:()=>{const [x,z]=pos();print(`x ${x.toFixed(1)} mm  z ${z.toFixed(1)} mm  ·  ${st.here?byId[st.here].name:'on a trace'}`,'d')},
@@ -693,6 +694,7 @@ const CMD={
     print(`decapping ${byId[here].part} …`,'d');setTimeout(()=>{closeTerm();enterChip(here)},280)},
   cards:()=>{closeTerm();window.LCCards&&LCCards.binder()},
   game:()=>{print('inserting coin…','d');setTimeout(()=>{location.href='arcade.html'},300)},arcade:()=>{location.href='arcade.html'},
+  trophies:()=>{print('opening the trophy case…','d');setTimeout(()=>{location.href='trophies.html'},250)},
   classic:()=>{location.href='index.html'},fun:()=>{location.href='fun.html'},
   clear:()=>{out.innerHTML=''},exit:()=>closeTerm()
 };CMD.binder=CMD.cards;CMD.warp=CMD.lightspeed;CMD.ls=CMD.lightspeed;CMD.cd=CMD.go;
@@ -706,7 +708,7 @@ const fontsReady=document.fonts&&document.fonts.load?Promise.race([Promise.all([
 fontsReady.catch(()=>{}).then(()=>{
   try{buildBoard();buildTraces();buildChips();buildElectron();buildPulses();buildUI();resize();}catch(err){console.error(err);$('#nogl').hidden=false;return}
   setHere('home');
-  const h=location.hash.slice(1),target=ALIAS[h];
+  const h=location.hash.slice(1),target=ALIAS[h];if(h==='cards'&&window.LCCards)setTimeout(()=>LCCards.binder(),700);
   requestAnimationFrame(t=>{last=t;frame(t)});
   setTimeout(()=>{$('#load').classList.add('gone');if(target&&target!=='home')setTimeout(()=>travel(target,true),reduce?0:1500)},300);
   if(coarse)fadeHelp();

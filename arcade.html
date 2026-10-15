@@ -79,6 +79,11 @@ button{font:inherit;color:inherit}
 .cart .d{color:var(--muted);font-size:.86rem}
 .cart .ctl{font:500 .7rem var(--mono);color:var(--c);letter-spacing:.03em}
 .cart .best{position:absolute;top:8px;right:8px;font:500 .62rem var(--mono);background:rgba(7,6,13,.85);border:1px solid var(--c);color:var(--c);padding:3px 7px;border-radius:3px}
+.cart.wide{grid-column:1 / -1;flex-direction:row}.cart.wide .shot{flex:0 0 46%;aspect-ratio:auto;min-height:190px;border-bottom:0;border-right:1.5px solid var(--line)}.cart.wide .meta{justify-content:center}
+@media (max-width:600px){.cart.wide{flex-direction:column}.cart.wide .shot{flex:none;aspect-ratio:800/560;min-height:0;border-right:0;border-bottom:1.5px solid var(--line)}}
+.cart.locked{cursor:default;opacity:.55;filter:saturate(.25)}.cart.locked:hover{transform:none;box-shadow:none;border-color:var(--line)}
+.cart.locked .shot{display:grid;place-items:center;background:repeating-linear-gradient(45deg,#0d0b16 0 10px,#110e1c 10px 20px)}.cart.locked .lockic{font:400 2rem var(--pixel);color:#5f5a80}
+.cart .new{position:absolute;top:8px;left:8px;font:400 .5rem var(--pixel);background:var(--amber);color:#140e02;padding:4px 6px;border-radius:3px}
 .cart .notch{position:absolute;top:0;left:50%;width:46px;height:8px;margin-left:-23px;background:var(--bg);border-radius:0 0 6px 6px}
 .back{all:unset;cursor:pointer;font:400 .6rem var(--pixel);padding:10px 14px;border:1.5px solid var(--line);border-radius:4px;color:var(--muted)}
 .back:hover{color:#fff;border-color:var(--cyan)}.back:focus-visible{outline:2px solid var(--amber)}
@@ -112,7 +117,7 @@ button{font:inherit;color:inherit}
 <div class="wrap">
   <header class="top">
     <a class="brand" href="#" id="homeLink">LC ARCADE</a><span class="sp"></span>
-    <a class="lnk" href="board.html">3D Board</a><a class="lnk" href="fun.html">Fun site</a><a class="lnk" href="index.html">Classic site</a>
+    <a class="lnk" href="trophies.html">Trophies</a><a class="lnk" href="board.html">3D Board</a><a class="lnk" href="fun.html">Fun site</a><a class="lnk" href="index.html">Classic site</a>
   </header>
 
   <!-- HOME -->
@@ -143,6 +148,7 @@ button{font:inherit;color:inherit}
   <div class="foot">LC ARCADE · ported from Lucas Chiang’s Python arcade hub</div>
 </div>
 
+<script src="achievements.js"></script>
 <script>
 (function(){
 'use strict';
@@ -382,16 +388,19 @@ let AC=null;function sfx(k){try{if(store.get('lc-mute')==='1')return;AC=AC||new 
 /* ================= runtime ================= */
 const cv=$('#cv'),g=cv.getContext('2d');let curId=null,cur=null,state='menu',raf=0,last=0,acc=0;const keys=new Set();
 function fit(){const r=cv.getBoundingClientRect(),d=Math.min(devicePixelRatio||1,2);cv.width=Math.round(r.width*d)||W;cv.height=Math.round(r.height*d)||H;g.setTransform(cv.width/W,0,0,cv.height/H,0,0)}
-const api={status:s=>{$('#gStatus').textContent=s},sfx,over:(title,text,rec)=>{if(state!=='play')return;state='over';let line=text;
+const ss={get(k){try{return sessionStorage.getItem(k)}catch(e){return null}},set(k,v){try{sessionStorage.setItem(k,v)}catch(e){}}};
+const api={status:s=>{$('#gStatus').textContent=s},sfx,over:(title,text,rec)=>{if(state!=='play')return;state='over';let line=text;fourDone();
   if(rec){const k='lc-arcade-'+rec.key,prev=+(store.get(k)||0);if(rec.val>prev){store.set(k,rec.val);line+=` · NEW BEST`}else line+=` · best ${prev} ${rec.label}`}
   setTimeout(()=>overlay(title,line,true),500)}};
 function overlay(title,text,isOver){const d=G[curId];$('#oTitle').textContent=title;$('#oText').textContent=text||'';$('#oKeys').innerHTML=isOver?'':d.keys.map(k=>`<span>${k}</span>`).join('');
   const B=$('#oBtns');B.innerHTML='';const b=document.createElement('button');b.className='btn';b.type='button';b.textContent=isOver?'PLAY AGAIN':(state==='paused'?'RESUME':'START');b.addEventListener('click',()=>{if(state==='paused'){state='play';$('#ovl').hidden=true;cv.focus()}else begin()});B.appendChild(b);
   const m=document.createElement('button');m.className='btn alt';m.type='button';m.textContent='MENU';m.addEventListener('click',()=>show(SOLO.includes(curId)?'solo':'duo'));B.appendChild(m);
   $('#ovl').hidden=false;setTimeout(()=>b.focus({preventScroll:true}),30)}
-function begin(){cur=Object.create(G[curId]);cur.init();api.status('');cur.step(new Set(),{status:api.status,sfx(){},over(){}});state='play';$('#ovl').hidden=true;acc=0;last=performance.now();cv.focus({preventScroll:true})}
+function fourDone(){if(curId!=='four')return;const n=(+ss.get('lc-four-streak')||0)+1;ss.set('lc-four-streak',n);
+  if(n>=4&&store.get('lc-td')!=='1'){store.set('lc-td','1');if(window.LCAch)LCAch.unlock('connect4');setTimeout(()=>api.status('NEW CARTRIDGE UNLOCKED · CHECK SINGLE PLAYER'),700)}else if(n>=4&&window.LCAch)LCAch.unlock('connect4')}
+function begin(){if(window.LCAch)LCAch.unlock('arcade');cur=Object.create(G[curId]);cur.init();api.status('');cur.step(new Set(),{status:api.status,sfx(){},over(){}});state='play';$('#ovl').hidden=true;acc=0;last=performance.now();cv.focus({preventScroll:true})}
 function loop(now){raf=requestAnimationFrame(loop);if(!cur)return;let dt=Math.min(.1,(now-last)/1000);last=now;if(state==='play'&&!document.hidden){acc+=dt;let n=0;while(acc>=1/60&&n<6){cur.step(keys,api);acc-=1/60;n++;if(state!=='play')break}}cur.draw(g)}
-function openGame(id){curId=id;const d=G[id];show('game');$('#gTitle').textContent=d.title.toUpperCase();$('#bezel').style.setProperty('--c',d.color);$('#ovl').style.setProperty('--c',d.color);
+function openGame(id){if(id!=='four')ss.set('lc-four-streak',0);curId=id;const d=G[id];show('game');$('#gTitle').textContent=d.title.toUpperCase();$('#bezel').style.setProperty('--c',d.color);$('#ovl').style.setProperty('--c',d.color);
   $('#touchNote').hidden=!(coarse&&DUO.includes(id)&&id!=='four');fit();cur=Object.create(d);cur.init();state='ready';api.status('');overlay(d.title.toUpperCase(),d.desc,false);
   try{history.replaceState(null,'','#'+id)}catch(e){}}
 function show(v){['home','list','game'].forEach(n=>$('#v'+n[0].toUpperCase()+n.slice(1)).hidden=n!==(v==='solo'||v==='duo'?'list':v));
@@ -405,7 +414,20 @@ function buildList(mode){const ids=mode==='solo'?SOLO:DUO;$('#listTitle').textCo
     const c=b.querySelector('canvas'),x=c.getContext('2d');x.scale(400/W,280/H);const inst=Object.create(d);inst.init();const k=new Set();const quiet={status(){},sfx(){},over(){}};
     try{for(let i=0;i<({kart:200,hockey:40,trails:90,snake:400,stars:30,paddle:50,paddle2:50,bricks:1,four:1})[id];i++){if(id==='kart'){k.add('KeyW');k.add('ArrowUp');if(i%7<2)k.add('KeyD');else k.delete('KeyD')}inst.step(k,quiet)}
       if(id==='four'){[[3,1],[3,2],[4,1],[2,2],[4,2],[5,1]].forEach(([c,p],i)=>{let r=5;while(inst.b[r][c])r--;inst.b[r][c]=p})}inst.draw(x)}catch(e){}});
+  if(mode==='solo')grid.appendChild(tdCart());
   setTimeout(()=>{const f=grid.querySelector('.cart');f&&f.focus({preventScroll:true})},30)}
+function tdCart(){const on=store.get('lc-td')==='1',seen=store.get('lc-td-seen')==='1';
+  if(!on){const d=document.createElement('div');d.className='cart wide locked';d.setAttribute('aria-label','Locked cartridge');d.style.setProperty('--c','#5f5a80');
+    d.innerHTML='<span class="notch"></span><div class="shot"><span class="lockic">?</span></div><div class="meta"><h3>???</h3><span class="d">A cartridge you haven’t unlocked yet. Some games are better played in a row.</span><span class="ctl">LOCKED</span></div>';return d}
+  const a=document.createElement('a');a.className='cart wide';a.href='td.html';a.style.setProperty('--c','#ffc23e');
+  a.innerHTML=`<span class="notch"></span>${seen?'':'<span class="new">NEW</span>'}<div class="shot"><canvas width="480" height="300"></canvas></div><div class="meta"><h3>Silicon Siege</h3><span class="d">Tower defense on the LC-2030 board. 104 towers, 12-node skill trees, 40 waves, four bosses. Roughly 20 minutes, and it gets hard.</span><span class="ctl">Mouse · Space sends next wave · F speed</span></div>`;
+  a.addEventListener('click',()=>store.set('lc-td-seen','1'));
+  const x=a.querySelector('canvas').getContext('2d');x.fillStyle='#070a12';x.fillRect(0,0,480,300);x.strokeStyle='rgba(120,160,255,.08)';for(let i=0;i<=480;i+=20){x.beginPath();x.moveTo(i,0);x.lineTo(i,300);x.stroke()}for(let i=0;i<=300;i+=20){x.beginPath();x.moveTo(0,i);x.lineTo(480,i);x.stroke()}
+  const P=[[0,50],[110,50],[110,150],[50,150],[50,250],[210,250],[210,90],[310,90],[310,210],[410,210],[410,70],[480,70]];x.lineJoin='round';x.strokeStyle='#1a1206';x.lineWidth=18;x.beginPath();P.forEach((p,i)=>i?x.lineTo(...p):x.moveTo(...p));x.stroke();x.strokeStyle='rgba(224,168,74,.7)';x.lineWidth=1.5;x.setLineDash([5,7]);x.stroke();x.setLineDash([]);
+  [[150,110,'#ff4fb3'],[260,170,'#9fd6ff'],[360,140,'#ffc23e'],[80,200,'#46f08f'],[360,40,'#ff8a3e'],[260,40,'#7fe8ff']].forEach(([X,Y,c])=>{x.fillStyle='#0b0f1a';x.strokeStyle='#2b3555';x.lineWidth=1.5;x.fillRect(X-12,Y-12,24,24);x.strokeRect(X-12,Y-12,24,24);x.shadowColor=c;x.shadowBlur=10;x.fillStyle=c;x.beginPath();x.arc(X,Y,6,0,6.283);x.fill();x.shadowBlur=0});
+  x.shadowColor='#ff4fb3';x.shadowBlur=12;x.strokeStyle='#ff4fb3';x.lineWidth=2.5;x.beginPath();x.moveTo(150,110);x.lineTo(210,150);x.stroke();x.strokeStyle='#cfeaff';x.shadowColor='#9fd6ff';x.lineWidth=2;x.beginPath();x.moveTo(260,170);x.lineTo(290,190);x.lineTo(284,200);x.lineTo(310,206);x.stroke();x.shadowBlur=0;
+  [[210,160,'#3ee8ff'],[210,200,'#46f08f'],[310,180,'#a98bff'],[330,210,'#46f08f'],[110,110,'#3ee8ff']].forEach(([X,Y,c])=>{x.fillStyle=c;x.shadowColor=c;x.shadowBlur=8;x.fillRect(X-5,Y-5,10,10)});x.shadowBlur=0;
+  x.fillStyle='#0b1220';x.strokeStyle='#3ee8ff';x.lineWidth=2;x.fillRect(440,50,34,34);x.strokeRect(440,50,34,34);x.font='10px "Press Start 2P",monospace';x.fillStyle='#fff';x.fillText('LC',447,72);return a}
 document.querySelectorAll('.mode').forEach(b=>b.addEventListener('click',()=>show(b.dataset.mode)));
 document.querySelectorAll('[data-nav="home"]').forEach(b=>b.addEventListener('click',()=>show('home')));
 $('#homeLink').addEventListener('click',e=>{e.preventDefault();show('home')});
