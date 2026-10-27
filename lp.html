@@ -8,7 +8,7 @@
 <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bungee&family=Silkscreen&family=JetBrains+Mono:wght@500&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bungee&family=Nosifer&family=Silkscreen&family=JetBrains+Mono:wght@500&display=swap">
 <style>
 html,body{margin:0;height:100%;background:#000;overflow:hidden}
 body{display:grid;place-items:center}
@@ -52,7 +52,7 @@ function csStep(dt){const c=LP.cs;if(!c)return;if(c.wait>0){c.wait-=dt;return}if
 let curZone=null;
 function enterRoom(id,x,y,opts){opts=opts||{};const r=LP.rooms[id];LP.room=r;if(!r.canvas)LP.buildRoomCanvas(r);
   for(let i=0;i<r.grid.length;i++)if(r.grid[i]===5)r.grid[i]=0;
-  LP.plats=[];LP.shots=[];LP.parts.length=0;LP.boss=null;LP.ents=r.spawns.map(LP.spawn).filter(Boolean);LP.roomT=0;
+  LP.zoomFX=null;LP.plats=[];LP.shots=[];LP.parts.length=0;LP.boss=null;LP.ents=r.spawns.map(LP.spawn).filter(Boolean);LP.roomT=0;
   H.x=x;H.y=y;H.lastSafe={x,y};H.after=[];H.onPlat=null;H.scarf.forEach(p=>{p.x=p.px=x+9;p.y=p.py=y+8});
   LP.save.seen[id]=1;if(r.zone!==curZone){curZone=r.zone;const Z=LP.ZONES[r.zone];if(!opts.quiet)LP.banner(Z.name,Z.sub.toUpperCase());LP.music(Z.music)}
   LP.camUpdate(0,true);LP.fade={t:0,d:.22,inOnly:true}}
@@ -72,10 +72,10 @@ LP.getAbility=(ab,shrine)=>{if(LP.abil[ab])return;LP.runCS((function*(){H.ctrl=f
   LP.abil[ab]=1;LP.save.abil=LP.abil;LP.saveGame();LP.part({x:H.x+9,y:H.y+20,k:'ring',col:'#ffd36b',s:10,grow:700,life:.6,w:5});LP.shake(10);
   state='ability';abilCard={ab,t:0};yield()=>state==='play';H.ctrl=true})())};
 LP.startBoss=id=>{const b=LP.BOSSES[id]();LP.boss=b;const full=!LP.save.cs[id];LP.save.cs[id]=1;LP.saveGame();LP.runCS(LP.INTROS[id](b,full))};
-LP.bossDefeated=b=>{LP.save.boss[b.id]=1;LP.saveGame();if(window.LCAch)LCAch.unlock('lp_'+b.id);
+LP.bossDefeated=b=>{LP.save.boss[b.id]=1;LP.saveGame();if(window.LCAch&&!LP.devUsed)LCAch.unlock('lp_'+b.id);
   setTimeout(()=>{if(LP.boss===b){LP.boss=null;const gt=LP.ents.find(e=>e.kind==='gate');gt&&gt.open();LP.titleCard('INFECTION PURGED',b.name,2.6);LP.music(LP.ZONES[LP.room.zone].music)}},1300)};
 LP.onHurt=()=>{};
-const killHero0=LP.killHero;LP.killHero=()=>{killHero0();LP.save.deaths++;const b=LP.boss;if(b&&b.id==='weaver'&&b.state!=='dying')setTimeout(()=>LP.mwahaha(b,.7,false),500)};
+const killHero0=LP.killHero;LP.killHero=()=>{killHero0();LP.save.deaths++;const b=LP.boss;if(b&&b.id==='weaver'&&b.state!=='dying')setTimeout(()=>LP.mwahaha(b,.85,false,{x:b.x,y:b.y}),500)};
 
 /* ---------- game flow ---------- */
 function startGame(m,cont){mode=m;LP.store.set('lc-lp-mode',m);const M=MODES[m];LP.NM=M.nm;LP.maxHearts=M.hearts;
@@ -112,6 +112,7 @@ function step(dt){LP.t+=dt;
   for(const o of LP.overlays){o.t+=dt;o.update&&o.update(dt)}LP.overlays=LP.overlays.filter(o=>o.t<o.life);
   if(LP.flash){LP.flash.t-=dt;if(LP.flash.t<=0)LP.flash=null}if(LP.fade){LP.fade.t+=dt;if(LP.fade.t>=LP.fade.d)LP.fade=null}
   if(state==='title'){titleStep(dt);return}
+  if(state==='console'){LP.updParts&&0;return}
   if(state==='pause'||state==='map'){menuStep();return}
   if(state==='lore'){loreBox.t+=dt;if(loreBox.t>.3&&(I.hit.down||I.hit.attack||I.hit.confirm||I.hit.jump||I.hit.pause)){state='play';loreBox=null}return}
   if(state==='ability'){abilCard.t+=dt;if(abilCard.t>1&&(I.hit.attack||I.hit.confirm)){state='play';const ab=abilCard.ab;abilCard=null;if(ab==='grip'){state='end';endCard={t:0}}}return}
@@ -153,6 +154,8 @@ function textBox(g,lines,y,h){const w=640,x=(VW-w)/2;g.fillStyle='rgba(4,7,14,.9
 function render(){const s=cv.width/VW;g.setTransform(s,0,0,cv.height/VH,0,0);
   if(state==='title'){titleDraw(g);return}
   LP.renderWorld(g,drawActors);
+  if(LP.zoomFX){const z=LP.zoomFX;z.t+=1/60;if(z.t>=z.life)LP.zoomFX=null;else{const e=Math.min(LP.ease.out(Math.min(1,z.t/.4)),LP.ease.inOut(Math.min(1,(z.life-z.t)/.5)));const k=1+(z.z-1)*e;
+    if(k>1.002){const cw=cv.width,ch=cv.height,sc=cw/VW,fx=(z.x-LP.cam.x)*sc,fy=(z.y-LP.cam.y)*sc,sw=cw/k,sh=ch/k,sx=clamp(fx-sw/2,0,cw-sw),sy=clamp(fy-sh/2,0,ch-sh);g.save();g.setTransform(1,0,0,1,0,0);g.drawImage(cv,sx,sy,sw,sh,0,0,cw,ch);g.restore()}}}
   for(const o of LP.overlays)o.draw(g,o.t);
   // letterbox
   LP.lb=appr(LP.lb||0,LP.cs?1:0,LP.DT*3);if(LP.lb>0){g.fillStyle='#000';g.fillRect(0,0,VW,46*LP.lb);g.fillRect(0,VH-46*LP.lb,VW,46*LP.lb)}
@@ -161,9 +164,10 @@ function render(){const s=cv.width/VW;g.setTransform(s,0,0,cv.height/VH,0,0);
   if(LP.fade){const k=LP.fade.t/LP.fade.d;g.fillStyle=`rgba(0,0,0,${LP.fade.inOnly?1-k:k<.5?k*2:2-k*2})`;g.fillRect(0,0,VW,VH)}
   if(H.hazT>0){g.fillStyle=`rgba(0,0,0,${1-Math.abs(H.hazT-.25)/.25})`;g.fillRect(0,0,VW,VH)}
   if(state==='lore')loreDraw(g);if(state==='ability')abilDraw(g);if(state==='end')endDraw(g);if(state==='pause')pauseDraw(g);if(state==='map')mapDraw(g);
-  if(state==='dead')deadDraw(g);if(state==='over')overDraw(g)}
-function loreDraw(g){const L=loreBox.txt.split('\n'),n=Math.floor(loreBox.t*60);textBox(g,L,VH-200,150);g.font='15px "JetBrains Mono",monospace';let k=n;
-  L.forEach((l,i)=>{if(k<=0)return;g.fillStyle=i===0?'#9fd6ff':'#e6ecff';g.fillText(l.slice(0,k),(VW-640)/2+24,VH-166+i*28);k-=l.length});g.font='10px Silkscreen,monospace';g.fillStyle='rgba(200,210,240,.6)';g.fillText('SPACE TO CLOSE',(VW+640)/2-120,VH-62)}
+  if(state==='dead')deadDraw(g);if(state==='over')overDraw(g);if(state==='console')conDraw(g)}
+function loreDraw(g){g.font='15px "JetBrains Mono",monospace';const L=[];loreBox.txt.split('\n').forEach((para,pi)=>{let line='';for(const w of para.split(' ')){const tt=line?line+' '+w:w;if(g.measureText(tt).width>588&&line){L.push([line,pi]);line=w}else line=tt}L.push([line,pi])});
+  const h=Math.max(150,L.length*26+70);textBox(g,null,VH-h-46,h);let k=Math.floor(loreBox.t*60);
+  L.forEach(([l,pi],i)=>{if(k<=0)return;g.fillStyle=pi===0?'#9fd6ff':'#e6ecff';g.fillText(l.slice(0,k),(VW-640)/2+24,VH-h-46+36+i*26);k-=l.length});g.font='10px Silkscreen,monospace';g.fillStyle='rgba(200,210,240,.6)';g.fillText('SPACE TO CLOSE',(VW+640)/2-120,VH-62)}
 function abilDraw(g){const a=LP.ABIL[abilCard.ab],t=abilCard.t,k=Math.min(1,t/.5);g.fillStyle=`rgba(0,0,0,${.75*k})`;g.fillRect(0,0,VW,VH);g.globalAlpha=k;g.textAlign='center';
   g.font='12px Silkscreen,monospace';g.fillStyle='#ffd36b';g.fillText('NEW ABILITY',VW/2,170);g.font='400 54px Bungee, Impact, sans-serif';const gr=g.createLinearGradient(0,190,0,250);gr.addColorStop(0,'#fff8e0');gr.addColorStop(1,'#ffc23e');g.fillStyle=gr;g.fillText(a.name,VW/2,240);
   g.font='16px "JetBrains Mono",monospace';g.fillStyle='#e6ecff';wrap(g,a.desc,VW/2,292,560,24);
@@ -238,6 +242,44 @@ function frame(now){requestAnimationFrame(frame);const dt=Math.min(.1,(now-last)
 addEventListener('blur',()=>{if(state==='play'&&!LP.cs){state='pause';menuI=0}});
 addEventListener('pointerdown',()=>{LP.ac();cv.focus()});
 LP.music('title');requestAnimationFrame(frame);
+/* ---------- dev console (` key, password protected) ---------- */
+const CON={lines:[],input:'',hist:[],hi:0,prev:'play',unlocked:(()=>{try{return sessionStorage.getItem('lc-lp-dev')==='1'}catch(e){return false}})()};
+const hash=s=>{let h=5381;for(const c of s)h=((h*33)^c.charCodeAt(0))>>>0;return h};
+const say=(t,c)=>{CON.lines.push({t,c:c||'#cfe3ff'});if(CON.lines.length>14)CON.lines.shift()};
+const ARENA={weaver:{room:'mb_boss',hx:860},ripper:{room:'cpu_boss',hx:120}};
+function openCon(){if(state!=='play'&&state!=='pause')return;CON.prev='play';state='console';CON.input='';if(!CON.lines.length)say(CON.unlocked?'dev console · type help':'password required','#9aa6c2');LP.sfx('ui')}
+function closeCon(){state='play';LP.I.hit={};LP.sfx('ui')}
+function skipIntro(b){if(!LP.cs)return;LP.cs=null;LP.cam.focus=null;LP.darkOverride=null;LP.overlays.length=0;LP.zoomFX=null;H.ctrl=true;H.frozen=false;const gt=LP.ents.find(e=>e.kind==='gate');gt&&gt.close();
+  if(b.id==='weaver'){b.woke=true;b.landed=true;b.y=350;b.vy=0;b.eye=1}else{b.form=1;b.eye=1;b.armTarget=1;b.copies=[]}if(!['dying'].includes(b.state)){b.state='idle';b.next=.8}LP.music(b.id==='weaver'?'boss':'boss2')}
+function bossCmd(id,intro){const A=ARENA[id];if(!A){say('bosses: weaver, ripper','#ff8a9b');return}delete LP.save.boss[id];if(intro)delete LP.save.cs[id];else LP.save.cs[id]=1;
+  if(id==='ripper')LP.abil.dash=1;H.dead=false;H.hearts=LP.maxHearts;H.inv=0;closeCon();curZone=null;enterRoom(A.room,A.hx,420);H.face=id==='weaver'?-1:1;LP.startBoss(id)}
+function devExec(line){const [c,...a]=line.trim().split(/\s+/);const cmd=(c||'').toLowerCase(),arg=(a[0]||'').toLowerCase();if(!cmd)return;
+  if(!CON.unlocked){if(hash(line.trim())===900734018){CON.unlocked=true;try{sessionStorage.setItem('lc-lp-dev','1')}catch(e){}say('access granted · type help','#7dff9a');LP.sfx('uiok')}else{say('access denied','#ff6b8b');LP.sfx('hurt')}return}
+  LP.devUsed=true;say('> '+line,'#ffd36b');const b=LP.boss;
+  switch(cmd){
+    case 'help':['boss weaver|ripper [intro]  fight a boss (intro = full cutscene)','skip           skip the intro cutscene','phase          skip the boss to phase 2','kill           finish the boss off','hp <percent>   set boss health','god            toggle invincibility','give dash|shot|grip|all','heal  ·  charge','tp <room>      teleport (tp alone lists rooms)','laugh          play the laugh','clear  ·  exit'].forEach(l=>say(l,'#cfe3ff'));break;
+    case 'boss':bossCmd(arg,(a[1]||'').toLowerCase()==='intro');return;
+    case 'skip':if(b&&LP.cs){skipIntro(b);say('intro skipped','#7dff9a');closeCon()}else say('no cutscene running','#ff8a9b');break;
+    case 'phase':if(!b||b.dead)say('no boss fight running','#ff8a9b');else if(b.phase>=2)say('already in phase 2','#ff8a9b');else{skipIntro(b);b.hp=Math.floor(b.max/2)+1;b.hurt(1,1);say('phase 2','#7dff9a');closeCon()}break;
+    case 'kill':case 'finish':if(!b||b.dead||b.state==='dying')say('no boss fight running','#ff8a9b');else{skipIntro(b);b.hurt(b.hp+999,1);say('boss finished','#7dff9a');closeCon()}break;
+    case 'hp':if(!b)say('no boss fight running','#ff8a9b');else{skipIntro(b);const v=clamp(+arg||1,1,100);b.hp=Math.max(1,Math.round(b.max*v/100));say('boss hp '+v+'%','#7dff9a')}break;
+    case 'god':LP.godMode=!LP.godMode;say('god mode '+(LP.godMode?'on':'off'),'#7dff9a');break;
+    case 'give':{const L=arg==='all'?['dash','shot','grip']:[arg];if(!L.every(x=>LP.ABIL[x])){say('give dash|shot|grip|all','#ff8a9b');break}L.forEach(x=>LP.abil[x]=1);LP.save.abil=LP.abil;say('gave '+L.join(', '),'#7dff9a');break}
+    case 'heal':H.hearts=LP.maxHearts;say('healed','#7dff9a');break;
+    case 'charge':H.charge=99;say('charge full','#7dff9a');break;
+    case 'tp':if(!LP.rooms[arg]){say('rooms: '+Object.keys(LP.rooms).join(' '),'#cfe3ff');break}{const r=LP.rooms[arg],sp=r.spawns.find(x=>x.type==='save'),x=sp?sp.tx*T:3*T,y=sp?(sp.ty+1)*T-40:(r.h-3)*T-40;closeCon();curZone=null;enterRoom(arg,x,y)}return;
+    case 'laugh':{const w=LP.boss;closeCon();LP.mwahaha(w&&w.id==='weaver'?w:null,1,true,w?{x:w.x,y:w.y}:{x:H.x+9,y:H.y}) ;return}
+    case 'clear':CON.lines=[];break;case 'exit':case 'close':closeCon();return;
+    default:say('unknown command · type help','#ff8a9b')}}
+addEventListener('keydown',e=>{if(e.code==='Backquote'){e.preventDefault();if(state==='console')closeCon();else openCon();return}
+  if(state!=='console')return;e.preventDefault();LP.I.hit={};
+  if(e.key==='Escape'){closeCon();return}if(e.key==='Enter'){const l=CON.input;CON.input='';if(l.trim()&&CON.unlocked)CON.hist.push(l);CON.hi=CON.hist.length;devExec(l);return}
+  if(e.key==='Backspace'){CON.input=CON.input.slice(0,-1);return}if(e.key==='ArrowUp'&&CON.unlocked){if(CON.hi>0)CON.input=CON.hist[--CON.hi];return}if(e.key==='ArrowDown'&&CON.unlocked){CON.hi=Math.min(CON.hist.length,CON.hi+1);CON.input=CON.hist[CON.hi]||'';return}
+  if(e.key.length===1&&CON.input.length<60)CON.input+=e.key});
+function conDraw(g){const h=330;g.fillStyle='rgba(3,5,10,.93)';g.fillRect(0,0,VW,h);g.fillStyle=CON.unlocked?'#7dff9a':'#ff6b8b';g.fillRect(0,h,VW,2);
+  g.font='14px "JetBrains Mono",monospace';CON.lines.forEach((l,i)=>{g.fillStyle=l.c;g.fillText(l.t,24,30+i*20)});
+  const shown=CON.unlocked?CON.input:'*'.repeat(CON.input.length);g.fillStyle='#ffd36b';g.fillText((CON.unlocked?'$ ':'password: ')+shown+(Math.floor(LP.t*3)%2?'_':''),24,h-18);
+  g.font='10px Silkscreen,monospace';g.fillStyle='rgba(200,210,240,.5)';g.textAlign='right';g.fillText('` OR ESC TO CLOSE',VW-20,h-18);g.textAlign='left'}
 LP.debug={startGame,enterRoom,get state(){return state},set state(v){state=v}};
 })();
 </script>

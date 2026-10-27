@@ -49,15 +49,24 @@ const SFX={
 };
 LP.sfx=k=>{try{SFX[k]&&SFX[k]()}catch(e){}};
 /* the laugh: formant-filtered sawtooth "HA"s through an echo */
-LP.laugh=(n,p,vol)=>{const a=ac();if(!a)return;n=n||8;p=p||92;vol=vol||.55;const t0=a.currentTime+.03;
-  for(let i=0;i<n;i++){const first=i===0,t=t0+(first?0:.34+(i-1)*.19),d=first?.36:.16,f=p*(first?1:1.12-i*.022);
-    const o=a.createOscillator();o.type='sawtooth';o.frequency.setValueAtTime(f*(first?.7:1.15),t);o.frequency.linearRampToValueAtTime(f,t+(first?.12:.04));o.frequency.linearRampToValueAtTime(f*.82,t+d);
-    const o2=a.createOscillator();o2.type='square';o2.frequency.setValueAtTime(f/2,t);o2.frequency.linearRampToValueAtTime(f*.41,t+d);
-    const mix=a.createGain();o.connect(mix);const g2=a.createGain();g2.gain.value=.35;o2.connect(g2);g2.connect(mix);
-    const env=a.createGain();env.gain.setValueAtTime(0,t);env.gain.linearRampToValueAtTime(vol,t+(first?.1:.018));env.gain.setValueAtTime(vol,t+d*.55);env.gain.exponentialRampToValueAtTime(.0001,t+d);
-    (first?[[300,5,1.4],[700,6,1.2],[1100,7,.6]]:[[750,6,1.6],[1200,7,1],[2600,9,.4]]).forEach(([fr,q,gn])=>{const bp=a.createBiquadFilter();bp.type='bandpass';bp.frequency.value=fr;bp.Q.value=q;const gg=a.createGain();gg.gain.value=gn*2.2;mix.connect(bp);bp.connect(gg);gg.connect(env)});
-    env.connect(sfxBus);env.connect(echo);o.start(t);o2.start(t);o.stop(t+d+.05);o2.stop(t+d+.05);
-    noise(d*.7,first?600:1500,1.2,vol*.12,t-a.currentTime)}};
+/* the laugh: two detuned, distorted voices through vowel formants, a growl underneath, a long cavern echo */
+let dist=null,cave=null;
+function laughBus(a){if(dist)return;dist=a.createWaveShaper();const n=2048,c=new Float32Array(n);for(let i=0;i<n;i++){const x=i/n*2-1;c[i]=Math.tanh(x*3.2)}dist.curve=c;dist.oversample='2x';
+  cave=a.createDelay(1.5);cave.delayTime.value=.33;const fb=a.createGain();fb.gain.value=.5;const lp=a.createBiquadFilter();lp.type='lowpass';lp.frequency.value=1100;cave.connect(lp);lp.connect(fb);fb.connect(cave);const wet=a.createGain();wet.gain.value=.7;lp.connect(wet);wet.connect(sfxBus);
+  dist.connect(sfxBus);dist.connect(cave)}
+LP.laugh=(n,p,vol)=>{const a=ac();if(!a)return;laughBus(a);n=n||8;p=p||64;vol=vol||.5;const t0=a.currentTime+.03;
+  // dread swell under the first syllable
+  {const o=a.createOscillator(),g=a.createGain();o.type='sine';o.frequency.setValueAtTime(48,t0);o.frequency.exponentialRampToValueAtTime(34,t0+1.6);g.gain.setValueAtTime(0,t0);g.gain.linearRampToValueAtTime(.35,t0+.15);g.gain.exponentialRampToValueAtTime(.0001,t0+1.8);o.connect(g);g.connect(sfxBus);o.start(t0);o.stop(t0+1.9)}
+  let t=t0;for(let i=0;i<n;i++){const first=i===0,last=i===n-1,d=first?.55:last?.75:.2,f=p*(first?1:(1.1-i*.03))*(1+(Math.random()-.5)*.04);
+    const mix=a.createGain();
+    [[1,.9,'sawtooth'],[.503,.7,'sawtooth'],[1.012,.5,'square']].forEach(([m,gv,ty])=>{const o=a.createOscillator();o.type=ty;o.frequency.setValueAtTime(f*m*(first?.55:1.12),t);o.frequency.linearRampToValueAtTime(f*m,t+(first?.22:.05));o.frequency.linearRampToValueAtTime(f*m*(last?.55:.8),t+d);
+      const vib=a.createOscillator(),vg=a.createGain();vib.frequency.value=first||last?6:0.01;vg.gain.value=f*m*.03;vib.connect(vg);vg.connect(o.frequency);const g=a.createGain();g.gain.value=gv;o.connect(g);g.connect(mix);o.start(t);vib.start(t);o.stop(t+d+.05);vib.stop(t+d+.05)});
+    const env=a.createGain();env.gain.setValueAtTime(0,t);env.gain.linearRampToValueAtTime(vol,t+(first?.14:.02));env.gain.setValueAtTime(vol,t+d*.5);env.gain.exponentialRampToValueAtTime(.0001,t+d);
+    (first?[[280,5,1.6],[620,6,1.3],[1000,7,.5]]:[[680,5,1.8],[1080,6,1.1],[2400,8,.35]]).forEach(([fr,q,gn])=>{const bp=a.createBiquadFilter();bp.type='bandpass';bp.frequency.value=fr;bp.Q.value=q;const gg=a.createGain();gg.gain.value=gn*2.4;mix.connect(bp);bp.connect(gg);gg.connect(env)});
+    env.connect(dist);
+    // throat growl
+    noise(d*.95,240,1.5,vol*.35,t-a.currentTime,'lowpass');noise(d*.6,first?500:1300,1.4,vol*.14,t-a.currentTime);
+    t+=first?.62:.24+Math.random()*.03}};
 
 /* music: tiny step sequencer */
 const TRK={
@@ -326,7 +335,7 @@ LP.renderWorld=(g,drawActors)=>{const r=LP.room,Z=LP.ZONES[r.zone];LP.lights.len
   if(r.pulses){g.fillStyle=Z.acc;for(const q of r.pulses){q.p=(q.p+q.sp*q.d*LP.DT+q.u.len)%q.u.len;const x=q.u.x+q.p,y=q.u.y;if(x<cx-40||x>cx+VW+40||y<cy-40||y>cy+VH+40)continue;g.globalAlpha=.9;g.fillRect(x-1,y-1,3,3);g.globalAlpha=.35;g.fillRect(x-q.d*10-4,y-.5,10,2);LP.light(x,y,46,.55)}g.globalAlpha=1}drawActors(g,'mid');drawParts(g,false);drawActors(g,'front');drawParts(g,true);
   g.restore();
   // lighting
-  const dark=LP.darkOverride!=null?LP.darkOverride:Z.dark;if(dark>0){lg.globalCompositeOperation='source-over';lg.clearRect(0,0,VW,VH);lg.fillStyle=`rgba(0,0,0,${dark})`;lg.fillRect(0,0,VW,VH);lg.globalCompositeOperation='destination-out';
+  let dark=LP.darkOverride!=null?LP.darkOverride:Z.dark;if(LP.boss&&r.meta.arena&&LP.darkOverride==null)dark=Math.max(dark,.7)+(Math.random()<.04?.12:0);if(dark>0){lg.globalCompositeOperation='source-over';lg.clearRect(0,0,VW,VH);lg.fillStyle=`rgba(0,0,0,${dark})`;lg.fillRect(0,0,VW,VH);lg.globalCompositeOperation='destination-out';
     const L=[{x:H.x+9,y:H.y+18,r:260,i:1},...LP.lights];for(const l of L){const x=l.x-cx,y=l.y-cy;if(x<-l.r||y<-l.r||x>VW+l.r||y>VH+l.r)continue;const gr=lg.createRadialGradient(x,y,0,x,y,l.r);gr.addColorStop(0,`rgba(0,0,0,${l.i})`);gr.addColorStop(1,'rgba(0,0,0,0)');lg.fillStyle=gr;lg.fillRect(x-l.r,y-l.r,l.r*2,l.r*2)}
     g.drawImage(lc,0,0)}
   // motes
