@@ -135,7 +135,8 @@ function step(dt){LP.t+=dt;
 function drawActors(g,layer){for(const e of LP.ents)if(!e.enemy&&(e.layer||'mid')===layer)e.draw(g);
   if(layer==='mid'){for(const e of LP.ents)if(e.enemy)e.draw(g);if(LP.boss)LP.boss.draw(g);LP.heroDraw(g);
     for(const s of LP.shots){if(s.mine){g.save();g.translate(s.x,s.y);g.rotate(Math.atan2(s.vy,s.vx));g.shadowColor='#3ee8ff';g.shadowBlur=16;g.fillStyle='#dffcff';g.fillRect(-12,-4,24,8);g.fillStyle='#3ee8ff';g.fillRect(-18,-2,8,4);g.restore()}
-      else{g.fillStyle=s.col;g.shadowColor=s.col;g.shadowBlur=12;g.beginPath();g.arc(s.x,s.y,s.r,0,6.283);g.fill();g.shadowBlur=0;g.fillStyle='#fff';g.beginPath();g.arc(s.x,s.y,s.r*.4,0,6.283);g.fill()}LP.light(s.x,s.y,50,.5)}}}
+      else{const sp=orb(s.col,s.r);g.drawImage(sp,s.x-sp.width/2,s.y-sp.height/2)}if(s.mine)LP.light(s.x,s.y,50,.5)}}}
+const ORB={};function orb(col,r){const k=col+r;if(ORB[k])return ORB[k];const c=document.createElement('canvas'),R=Math.ceil(r*3);c.width=c.height=R*2;const x=c.getContext('2d');const gr=x.createRadialGradient(R,R,0,R,R,R);gr.addColorStop(0,col);gr.addColorStop(.4,col);gr.addColorStop(1,'rgba(0,0,0,0)');x.globalAlpha=.55;x.fillStyle=gr;x.fillRect(0,0,R*2,R*2);x.globalAlpha=1;x.fillStyle=col;x.beginPath();x.arc(R,R,r,0,6.283);x.fill();x.fillStyle='#fff';x.beginPath();x.arc(R,R,r*.4,0,6.283);x.fill();return ORB[k]=c}
 function heart(g,x,y,s,full,t){g.save();g.translate(x,y);g.scale(s,s);g.beginPath();g.moveTo(0,6);g.bezierCurveTo(-14,-4,-9,-14,0,-7);g.bezierCurveTo(9,-14,14,-4,0,6);g.closePath();
   if(full){g.fillStyle='#ff4f6b';g.shadowColor='#ff4f6b';g.shadowBlur=10;g.fill();g.shadowBlur=0;g.fillStyle='#ffd0d8';g.fillRect(-6,-7,3,3);g.strokeStyle='#8a1a30';g.lineWidth=1;g.beginPath();g.moveTo(-4,0);g.lineTo(0,-3);g.lineTo(4,0);g.stroke()}
   else{g.strokeStyle='rgba(255,120,140,.5)';g.lineWidth=1.5;g.stroke()}g.restore()}
