@@ -36,8 +36,8 @@ D('cpu_pipe','cpu',288,-27,64,18,r=>{r.border({L:[12,15],R:[12,15]});r.solid(0,0
   r.ent('mover',9,13,{range:5,ph:0});r.ent('mover',18,12,{range:6,ph:2});r.ent('mover',36,12,{range:6,ph:1});r.ent('mover',46,13,{range:6,ph:3});
   r.ent('turret',20,3,{dir:'down'});r.ent('turret',44,3,{dir:'down'});r.ent('flyer',32,8)});
 D('cpu_ante','cpu',352,-27,32,18,r=>{r.border({L:[12,15],R:[12,15]});r.solid(0,0,32,3);r.solid(0,16,32,2);r.ent('save',18,15);r.ent('lore',8,15,{txt:LORE.cpuante})});
-D('cpu_boss','cpu',384,-27,36,18,r=>{r.border({L:[12,15],R:[12,15]});r.solid(0,0,36,2);r.solid(0,16,36,2);r.barrier(35,12,1,4);r.plat(6,11,5);r.plat(25,11,5);
-  r.ent('gate',0,12,{n:4});r.ent('boss',0,0,{id:'ripper',trig:8});r.ent('shrine',17,15,{ab:'grip',req:'ripper'});r.ent('offline',33,13)},{arena:1});
+D('cpu_boss','cpu',384,-27,36,18,r=>{r.border({L:[12,15],R:[12,15]});r.solid(0,0,36,2);r.solid(0,16,36,2);r.plat(6,11,5);r.plat(25,11,5);
+  r.ent('gate',0,12,{n:4});r.ent('gate',35,12,{n:4});r.ent('boss',0,0,{id:'ripper',trig:8});r.ent('shrine',17,15,{ab:'grip',req:'ripper'})},{arena:1});
 LP.START={room:'mb_drop',x:9*T,y:3*T};
 
 LP.ABIL={
@@ -157,11 +157,11 @@ P.gate=s=>({kind:'gate',tx:s.tx,ty:s.ty,n:s.n,closed:false,k:0,layer:'front',
   draw(g){if(this.k<=0)return;const x=this.tx*T,y0=this.ty*T,h=this.n*T*this.k;g.fillStyle='#0d1222';g.fillRect(x+3,y0,T-6,h);g.fillStyle='#ff3e6b';for(let i=0;i<h;i+=14)g.fillRect(x+6,y0+i,T-12,3);g.fillStyle='#3a4560';g.fillRect(x,y0+h-6,T,6)}});
 P.clock=s=>{const p={x:s.tx*T,y:s.ty*T,w:90,h:12,on:true,dx:0,dy:0};return{kind:'clock',plat:p,ph:s.ph,layer:'mid',
   update(dt){const idx=Math.floor(LP.roomT/1.05)%2,frac=(LP.roomT%1.05)/1.05;p.on=idx===this.ph;this.warn=p.on&&frac>.72;if(Math.floor(LP.roomT/1.05)!==this.lb){this.lb=Math.floor(LP.roomT/1.05);if(this.ph===0)LP.sfx('tick')}},
-  draw(g){const al=p.on?(this.warn&&Math.sin(LP.t*40)>0?.35:1):.12;g.globalAlpha=al;g.fillStyle='#ff8a3e';g.fillRect(p.x,p.y,p.w,4);g.fillStyle='#5a220c';g.fillRect(p.x,p.y+4,p.w,8);g.fillStyle='#ffd27a';for(let i=0;i<6;i++)g.fillRect(p.x+6+i*14,p.y+6,6,3);g.globalAlpha=1;if(p.on)LP.light(p.x+45,p.y,90,.5)}}};
+  draw(g){const al=p.on?(this.warn&&Math.sin(LP.t*40)>0?.35:1):.12;g.globalAlpha=al;g.fillStyle='#5a220c';g.beginPath();g.moveTo(p.x+6,p.y);g.lineTo(p.x+p.w-6,p.y);g.quadraticCurveTo(p.x+p.w+3,p.y+2,p.x+p.w-5,p.y+10);g.quadraticCurveTo(p.x+p.w/2,p.y+17,p.x+5,p.y+10);g.quadraticCurveTo(p.x-3,p.y+2,p.x+6,p.y);g.fill();g.strokeStyle='#ff8a3e';g.lineWidth=3;g.lineCap='round';g.beginPath();g.moveTo(p.x+5,p.y+1.5);g.lineTo(p.x+p.w-5,p.y+1.5);g.stroke();g.fillStyle='#ffd27a';for(let i=0;i<5;i++){g.beginPath();g.arc(p.x+15+i*15,p.y+8,2.2,0,6.283);g.fill()}g.globalAlpha=1;if(p.on)LP.light(p.x+45,p.y,90,.5)}}};
 P.mover=s=>{const p={x:s.tx*T,y:s.ty*T,w:90,h:12,on:true,dx:0,dy:0};const x0=p.x,R=s.range*T,per=R*2/65;return{kind:'mover',plat:p,layer:'mid',
   update(dt){const k=.5-.5*Math.cos((LP.roomT/per)*6.283+(s.ph||0));const nx=x0+R*k;p.dx=nx-p.x;p.x=nx},
-  draw(g){g.fillStyle='#ffb35b';g.fillRect(p.x,p.y,p.w,3);g.fillStyle='#3a1608';g.fillRect(p.x,p.y+3,p.w,9);g.fillStyle='#ff8a3e';g.fillRect(p.x+p.w/2-6,p.y+12,12,4);LP.light(p.x+45,p.y+16,60,.4)}}};
-P.boss=s=>({kind:'bossTrig',id:s.id,trig:s.trig,layer:'back',update(){if(LP.boss||LP.save.boss[this.id]||LP.cs||H.dead)return;const tx=(H.x+9)/T;if((this.id==='weaver'&&tx<this.trig)||(this.id==='ripper'&&tx>this.trig))LP.startBoss(this.id)},draw(){}});
+  draw(g){g.fillStyle='#3a1608';g.beginPath();g.moveTo(p.x+6,p.y);g.lineTo(p.x+p.w-6,p.y);g.quadraticCurveTo(p.x+p.w+3,p.y+2,p.x+p.w-5,p.y+10);g.quadraticCurveTo(p.x+p.w/2,p.y+18,p.x+5,p.y+10);g.quadraticCurveTo(p.x-3,p.y+2,p.x+6,p.y);g.fill();g.strokeStyle='#ffb35b';g.lineWidth=3;g.lineCap='round';g.beginPath();g.moveTo(p.x+5,p.y+1.5);g.lineTo(p.x+p.w-5,p.y+1.5);g.stroke();g.fillStyle='#ff8a3e';g.beginPath();g.arc(p.x+p.w/2,p.y+14,5,0,6.283);g.fill();LP.light(p.x+45,p.y+16,60,.4)}}};
+P.boss=s=>({kind:'bossTrig',id:s.id,trig:s.trig,layer:'back',update(){if(LP.boss||LP.save.boss[this.id]||LP.cs||H.dead)return;const tx=(H.x+9)/T;if(this.id==='weaver'?tx<this.trig:tx>this.trig)LP.startBoss(this.id)},draw(){}});
 
 LP.spawn=s=>{const f=EN[s.type]||P[s.type];if(!f){console.warn('no spawner',s.type);return null}const e=f(s);e.type=s.type;if(e.plat)LP.plats.push(e.plat);return e};
 

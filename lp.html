@@ -23,7 +23,10 @@ canvas{display:block;width:min(100vw,calc(100vh * 16 / 9));height:min(100vh,calc
 <script src="achievements.js"></script>
 <script src="lp-engine.js"></script>
 <script src="lp-world.js"></script>
+<script src="lp-props.js"></script>
+<script src="lp-stage2.js"></script>
 <script src="lp-bosses.js"></script>
+<script src="lp-bosses2.js"></script>
 <script>
 (function(){
 'use strict';
@@ -50,8 +53,9 @@ function csStep(dt){const c=LP.cs;if(!c)return;if(c.wait>0){c.wait-=dt;return}if
 
 /* ---------- rooms ---------- */
 let curZone=null;
-function enterRoom(id,x,y,opts){opts=opts||{};const r=LP.rooms[id];LP.room=r;if(!r.canvas)LP.buildRoomCanvas(r);
-  for(let i=0;i<r.grid.length;i++)if(r.grid[i]===5)r.grid[i]=0;
+function enterRoom(id,x,y,opts){opts=opts||{};const r=LP.rooms[id];LP.room=r;
+  r.grid.set(r.grid0);const br=LP.save.broken||{};let changed=r.dirty;for(const k in br){const [rid,pos]=k.split(':');if(rid!==id)continue;const [bx,by]=pos.split(',').map(Number);r.grid[by*r.w+bx]=0;changed=true}
+  if(!r.canvas||changed){LP.buildRoomCanvas(r);r.dirty=false}
   LP.zoomFX=null;LP.plats=[];LP.shots=[];LP.parts.length=0;LP.boss=null;LP.ents=r.spawns.map(LP.spawn).filter(Boolean);LP.roomT=0;
   H.x=x;H.y=y;H.lastSafe={x,y};H.after=[];H.onPlat=null;H.scarf.forEach(p=>{p.x=p.px=x+9;p.y=p.py=y+8});
   LP.save.seen[id]=1;if(r.zone!==curZone){curZone=r.zone;const Z=LP.ZONES[r.zone];if(!opts.quiet)LP.banner(Z.name,Z.sub.toUpperCase());LP.music(Z.music)}
@@ -73,7 +77,7 @@ LP.getAbility=(ab,shrine)=>{if(LP.abil[ab])return;LP.runCS((function*(){H.ctrl=f
   state='ability';abilCard={ab,t:0};yield()=>state==='play';H.ctrl=true})())};
 LP.startBoss=id=>{const b=LP.BOSSES[id]();LP.boss=b;const full=!LP.save.cs[id];LP.save.cs[id]=1;LP.saveGame();LP.runCS(LP.INTROS[id](b,full))};
 LP.bossDefeated=b=>{LP.save.boss[b.id]=1;LP.saveGame();if(window.LCAch&&!LP.devUsed)LCAch.unlock('lp_'+b.id);
-  setTimeout(()=>{if(LP.boss===b){LP.boss=null;const gt=LP.ents.find(e=>e.kind==='gate');gt&&gt.open();LP.titleCard('INFECTION PURGED',b.name,2.6);LP.music(LP.ZONES[LP.room.zone].music)}},1300)};
+  setTimeout(()=>{if(LP.boss===b){LP.boss=null;LP.ents.filter(e=>e.kind==='gate').forEach(gt=>gt.open());LP.titleCard('INFECTION PURGED',b.name,2.6);LP.music(LP.ZONES[LP.room.zone].music)}},1300)};
 LP.onHurt=()=>{};
 const killHero0=LP.killHero;LP.killHero=()=>{killHero0();LP.save.deaths++;const b=LP.boss;if(b&&b.id==='weaver'&&b.state!=='dying')setTimeout(()=>LP.mwahaha(b,.85,false,{x:b.x,y:b.y}),500)};
 
@@ -91,20 +95,28 @@ function respawn(){LP.cs=null;LP.overlays.length=0;LP.darkOverride=null;LP.cam.f
   if(s.room){LP.heroReset(s.x-9,s.y-40);H.hearts=LP.maxHearts;curZone=null;enterRoom(s.room,s.x-9,s.y-40)}else{LP.heroReset(0,0);H.hearts=LP.maxHearts;curZone=null;enterRoom(LP.START.room,LP.START.x,LP.START.y,{})}H.charge=Math.min(H.charge,33);state='play'}
 
 /* ---------- combat ---------- */
-function onHit(dir){H.charge=Math.min(99,H.charge+11);LP.stop(.045);LP.shake(3);if(H.atkDir==='d')LP.pogo();else if(H.atkDir==='f')H.vx-=H.face*(H.ground?160:60)}
+function dmgOut(){let d=H.atkDmg||1;if(H.critT>0){H.critT=0;d*=3;LP.sfx('crit');LP.stop(.14);LP.shake(16);LP.flash={c:'rgba(255,240,180,',t:.2,m:.45};LP.text(H.x+9+H.face*40,H.y-10,'CRITICAL','#ffd36b',{s:16,life:1})}else if(H.atkK==='full')LP.shake(7);return d}
+LP.parried=fromX=>{H.inv=Math.max(H.inv,.5);H.parryT=0;H.parryCD=0;H.critT=1.8;LP.slowT=.85;LP.sfx('parry');LP.stop(.08);LP.shake(8);const cx=H.x+9+H.face*14,cy=H.y+16;
+  LP.part({x:cx,y:cy,k:'ring',col:'#fff3b0',s:8,grow:420,life:.35,w:4});for(let i=0;i<16;i++){const a=rand(0,6.283);LP.part({x:cx,y:cy,vx:Math.cos(a)*rand(200,500),vy:Math.sin(a)*rand(200,500),life:.35,col:pick(['#fff3b0','#ffffff','#7df0ff']),k:'spark',s:3})}
+  LP.text(cx,cy-30,'PARRY','#fff3b0',{s:14,life:.9});
+  // whoever swung gets knocked off balance
+  let best=LP.ents.find(e=>e.enemy&&!e.dead&&e.hazRects&&e.hazRects().length)||null,bd=best?-1:170;for(const e of LP.ents)if(bd>=0&&e.enemy&&!e.dead){const d=Math.abs(e.x+e.w/2-(fromX==null?cx:fromX))+Math.abs(e.y+e.h/2-cy)*.5;if(d<bd){bd=d;best=e}}if(best){best.stagger=1.4;best.kb=.15;best.kbv=Math.sign(best.x-H.x)*260;LP.text(best.x+best.w/2,best.y-14,'!','#ffd36b',{s:20,life:.8})}
+  if(LP.boss&&!best){LP.bossFreeze=.7;LP.text(H.x+9+H.face*90,H.y-40,'STAGGERED','#ffd36b',{s:13,life:1})}};
+LP.onDive=(x,y)=>{for(const e of LP.ents)if(e.enemy&&!e.dead&&Math.hypot(e.x+e.w/2-x,e.y+e.h/2-y)<80&&!H.atkHit.has(e)){e.hurt(1,Math.sign(e.x-x)||1)}};
+function onHit(dir){H.charge=Math.min(99,H.charge+11);LP.stop(H.atkK==='full'?.08:.045);LP.shake(3);if(H.atkDir==='d')LP.pogo();else if(H.atkDir==='f')H.vx-=H.face*(H.ground?160:60)}
 function combat(dt){const ab=LP.atkBox(),hb=LP.heroBox();
-  if(ab){for(const e of LP.ents)if(e.enemy&&!e.dead&&!H.atkHit.has(e)&&LP.overlap(ab,e)){H.atkHit.add(e);e.hurt(1,H.atkDir==='f'?H.face:Math.sign(e.x-H.x)||1);onHit()}
-    if(LP.boss)for(const box of LP.boss.hitboxes()){const key=box.copy||LP.boss;if(!H.atkHit.has(key)&&LP.overlap(ab,box)){H.atkHit.add(key);if(LP.boss.hurt(1,H.face,box))onHit()}}
+  if(ab){for(const e of LP.ents)if(e.enemy&&!e.dead&&!H.atkHit.has(e)&&LP.overlap(ab,e)){H.atkHit.add(e);const dm=dmgOut()*(e.stagger>0?1.5:1);e.hurt(dm,H.atkDir==='f'?H.face:Math.sign(e.x-H.x)||1);if(H.atkK==='rise'&&!e.heavy){e.vy=-520;e.ground=false}onHit()}
+    if(LP.boss)for(const box of LP.boss.hitboxes()){const key=box.copy||LP.boss;if(!H.atkHit.has(key)&&LP.overlap(ab,box)){H.atkHit.add(key);if(LP.boss.hurt(dmgOut(),H.face,box))onHit()}}
     for(const s of LP.shots)if(!s.mine&&s.brk&&!s.dead&&LP.overlap(ab,{x:s.x-s.r,y:s.y-s.r,w:s.r*2,h:s.r*2})){s.dead=true;H.charge=Math.min(99,H.charge+4);LP.burst(s.x,s.y,10,s.col,250);LP.sfx('hit')}}
-  if(!H.dead&&!LP.cs){for(const e of LP.ents)if(e.enemy&&!e.dead&&LP.overlap(hb,{x:e.x+3,y:e.y+3,w:e.w-6,h:e.h-6}))LP.hurtHero(e.x+e.w/2,1);
-    if(LP.boss){for(const c of LP.boss.contact())if(LP.overlap(hb,c))LP.hurtHero(c.x+c.w/2,1);for(const z of LP.boss.haz)if(z.on&&LP.overlap(hb,z))LP.hurtHero(z.x+z.w/2,1)}}
+  if(!H.dead&&!LP.cs){for(const e of LP.ents){if(!e.enemy||e.dead)continue;if(LP.overlap(hb,{x:e.x+3,y:e.y+3,w:e.w-6,h:e.h-6}))LP.hurtHero(e.x+e.w/2,1);if(e.hazRects)for(const z of e.hazRects())if(LP.overlap(hb,z))LP.hurtHero(z.x+z.w/2,1)}
+    if(LP.boss){for(const c of LP.boss.contact())if(LP.overlap(hb,c))LP.hurtHero(c.x+c.w/2,1);for(const z of LP.boss.haz){if(!z.on)continue;if(z.bounce){if(LP.overlap(hb,z)){LP.hurtHero(H.x,1);H.vy=-980;H.canDJ=true;H.airDash=true;LP.burst(H.x+9,H.y+H.h,14,'#ff8ac8',300)}continue}if(z.slow){if(LP.overlap(hb,z))H.slowT=.25;continue}if(z.hit?z.hit(hb):LP.overlap(hb,z))LP.hurtHero(z.x+(z.w||0)/2,1)}}}
   for(const s of LP.shots){if(s.dead)continue;s.life-=dt;s.x+=s.vx*dt;s.y+=s.vy*dt;if(s.life<=0){s.dead=true;continue}
     if(LP.solidAt(s.x,s.y)){s.dead=true;LP.burst(s.x,s.y,8,s.col,200);continue}
     const box={x:s.x-s.r,y:s.y-s.r,w:s.r*2,h:s.r*2};
     if(s.mine){if(Math.random()<.9)LP.part({x:s.x,y:s.y,vx:-s.vx*.1,vy:rand(-20,20),life:.25,col:'#3ee8ff',s:3});
       for(const e of LP.ents)if(e.enemy&&!e.dead&&!s.hit.has(e)&&LP.overlap(box,e)){s.hit.add(e);e.hurt(s.dmg,Math.sign(s.vx));LP.burst(s.x,s.y,12,'#3ee8ff',300)}
       if(LP.boss)for(const b of LP.boss.hitboxes()){const key=b.copy||LP.boss;if(!s.hit.has(key)&&LP.overlap(box,b)){s.hit.add(key);LP.boss.hurt(s.dmg,Math.sign(s.vx),b);s.dead=true;LP.burst(s.x,s.y,14,'#3ee8ff',300)}}}
-    else if(!H.dead&&!LP.cs&&LP.overlap(hb,{x:s.x-s.r+2,y:s.y-s.r+2,w:s.r*2-4,h:s.r*2-4})){s.dead=true;LP.hurtHero(s.x,1)}}
+    else if(!H.dead&&!LP.cs&&LP.overlap(hb,{x:s.x-s.r+2,y:s.y-s.r+2,w:s.r*2-4,h:s.r*2-4})){if(H.parryT>0){LP.parried(null);s.mine=true;s.vx*=-1.5;s.vy*=-1.5;s.dmg=3;s.hit=new Set();s.col='#fff3b0';s.life=1.5}else{s.dead=true;LP.hurtHero(s.x,1)}}}
   LP.shots=LP.shots.filter(s=>!s.dead);LP.ents=LP.ents.filter(e=>!e.dead)}
 
 /* ---------- step ---------- */
@@ -115,7 +127,7 @@ function step(dt){LP.t+=dt;
   if(state==='console'){LP.updParts&&0;return}
   if(state==='pause'||state==='map'){menuStep();return}
   if(state==='lore'){loreBox.t+=dt;if(loreBox.t>.3&&(I.hit.down||I.hit.attack||I.hit.confirm||I.hit.jump||I.hit.pause)){state='play';loreBox=null}return}
-  if(state==='ability'){abilCard.t+=dt;if(abilCard.t>1&&(I.hit.attack||I.hit.confirm)){state='play';const ab=abilCard.ab;abilCard=null;if(ab==='grip'){state='end';endCard={t:0}}}return}
+  if(state==='ability'){abilCard.t+=dt;if(abilCard.t>1&&(I.hit.attack||I.hit.confirm)){state='play';const ab=abilCard.ab;abilCard=null;if(ab==='grip'||ab==='slam'){state='end';endCard={t:0,stage:ab==='grip'?1:2}}}return}
   if(state==='end'){endCard.t+=dt;if(endCard.t>1.2&&(I.hit.attack||I.hit.confirm)){state='play';endCard=null}return}
   if(state==='over'){overT+=dt;if(overT>1.2&&(I.hit.confirm||I.hit.attack))toTitle();return}
   if(state==='dead'){deadT+=dt;LP.updParts(dt);if(deadT>1.8)respawn();return}
@@ -126,8 +138,8 @@ function step(dt){LP.t+=dt;
   LP.roomT+=dt;LP.save.time+=dt;csStep(dt);
   for(const e of LP.ents)if(!e.enemy)e.update(dt);
   LP.heroUpdate(dt);
-  for(const e of LP.ents)if(e.enemy&&!e.dead)e.update(dt);
-  if(LP.boss)LP.boss.update(dt);
+  for(const e of LP.ents)if(e.enemy&&!e.dead){const sg=Math.max(e.stagger||0,e.stun||0);if(sg>0){e.stagger=Math.max(0,(e.stagger||0)-dt);e.stun=Math.max(0,(e.stun||0)-dt);e.t+=dt;e.flash=(e.flash||0)-dt;if(e.vy!=null&&!e.kind.match(/flyer|wisp|scanner|turret/)){e.vy+=2000*dt;e.vx=e.kb>0?e.kbv:0;e.kb-=dt;LP.moveBody(e,dt)}continue}e.update(dt)}
+  LP.bossFreeze=Math.max(0,(LP.bossFreeze||0)-dt);if(LP.boss&&!(LP.bossFreeze>0&&!LP.cs))LP.boss.update(dt);
   combat(dt);LP.updParts(dt);if(!H.dead&&!LP.cs)checkExit();LP.camUpdate(dt);
   if(H.dead&&H.deadT>1.3){if(mode==='impossible'){state='over';overT=0;LP.store.del(SK('impossible'));const best=+(LP.store.get('lc-lp-best-imp')||0),n=Object.keys(LP.save.boss).length;if(n>best)LP.store.set('lc-lp-best-imp',n);LP.stopMusic()}else{state='dead';deadT=0}}}
 
@@ -147,7 +159,7 @@ function hud(g){const t=LP.t;// charge orb
   for(const k of[33,66]){const yy=oy+r-k/99*r*2;g.fillStyle='rgba(255,255,255,.35)';g.fillRect(ox-r+3,yy,6,1.5)}
   for(let i=0;i<LP.maxHearts;i++)heart(g,92+i*32,40,1.3,i<H.hearts,t);
   g.font='10px Silkscreen,monospace';g.fillStyle=mode==='normal'?'rgba(200,210,240,.55)':mode==='nightmare'?'#c45bff':'#ff4f6b';g.fillText(MODES[mode].n,84,70);
-  const ab=['dash','shot','grip'].filter(a=>LP.abil[a]);ab.forEach((a,i)=>{g.fillStyle='rgba(255,211,107,.85)';g.fillText({dash:'SHIFT DASH',shot:'E SHOT',grip:'WALL GRIP'}[a],84+i*92,86)});
+  const ab=['dash','shot','grip','dj','slam'].filter(a=>LP.abil[a]);ab.forEach((a,i)=>{g.fillStyle='rgba(255,211,107,.85)';g.fillText({dash:'SHIFT DASH',shot:'E SHOT',grip:'WALL GRIP',dj:'2X JUMP',slam:'↓+SHIFT SLAM'}[a],84+i*92,86)});
   if(LP.boss&&LP.boss.state!=='form'&&LP.boss.state!=='ceiling'&&!LP.boss.dead){const b=LP.boss,w=520,x=(VW-w)/2,y=VH-44;g.fillStyle='rgba(5,8,16,.75)';g.fillRect(x-10,y-22,w+20,40);
     g.font='13px Silkscreen,monospace';g.fillStyle='#fff';g.textAlign='center';g.fillText(b.name,VW/2,y-6);g.textAlign='left';g.fillStyle='#2a1020';g.fillRect(x,y,w,8);
     b.shown=b.shown==null?b.hp:appr(b.shown,b.hp,b.max*LP.DT*.8);g.fillStyle='#ffd0d8';g.fillRect(x,y,w*b.shown/b.max,8);g.fillStyle='#ff3e6b';g.fillRect(x,y,w*b.hp/b.max,8);g.fillStyle='rgba(0,0,0,.6)';g.fillRect(x+w/2-1,y,2,8)}}
@@ -174,9 +186,9 @@ function abilDraw(g){const a=LP.ABIL[abilCard.ab],t=abilCard.t,k=Math.min(1,t/.5
   g.font='16px "JetBrains Mono",monospace';g.fillStyle='#e6ecff';wrap(g,a.desc,VW/2,292,560,24);
   g.font='14px Silkscreen,monospace';const kw=g.measureText(a.key).width+28;g.strokeStyle='#ffd36b';g.lineWidth=2;g.strokeRect(VW/2-kw/2,350,kw,34);g.fillStyle='#ffd36b';g.fillText(a.key,VW/2,372);
   if(t>1){g.font='11px Silkscreen,monospace';g.fillStyle=`rgba(200,210,240,${.5+.3*Math.sin(t*4)})`;g.fillText('PRESS SPACE',VW/2,440)}g.textAlign='left';g.globalAlpha=1}
-function endDraw(g){const t=endCard.t,k=Math.min(1,t/.6);g.fillStyle=`rgba(0,0,0,${.85*k})`;g.fillRect(0,0,VW,VH);g.globalAlpha=k;g.textAlign='center';g.font='400 46px Bungee, Impact, sans-serif';g.fillStyle='#fff';g.fillText('STAGE 1 PATCHED',VW/2,190);
-  g.font='15px "JetBrains Mono",monospace';g.fillStyle='#cfd8f0';const s=LP.save,m=Math.floor(s.time/60);g.fillText(`2 of 9 infections purged · ${m}m ${Math.floor(s.time%60)}s · ${s.deaths} deaths`,VW/2,236);
-  g.fillStyle='#ffb35b';g.fillText('The RAM, SSD, GPU, cooling, battery, display and BIOS are still infected.',VW/2,286);g.fillStyle='#9aa6c2';g.fillText('Those sectors come online in the next update. Your save will carry over.',VW/2,312);
+function endDraw(g){const t=endCard.t,k=Math.min(1,t/.6);g.fillStyle=`rgba(0,0,0,${.85*k})`;g.fillRect(0,0,VW,VH);g.globalAlpha=k;g.textAlign='center';g.font='400 46px Bungee, Impact, sans-serif';g.fillStyle='#fff';g.fillText(`STAGE ${endCard.stage} PATCHED`,VW/2,190);
+  g.font='15px "JetBrains Mono",monospace';g.fillStyle='#cfd8f0';const s=LP.save,m=Math.floor(s.time/60);g.fillText(`${Object.keys(s.boss).length} of 9 infections purged · ${m}m ${Math.floor(s.time%60)}s · ${s.deaths} deaths`,VW/2,236);
+  g.fillStyle='#ffb35b';g.fillText(endCard.stage===1?'The RAM and SSD are next. The way east is open now.':'The GPU, cooling, battery, display and BIOS are still infected.',VW/2,286);g.fillStyle='#9aa6c2';g.fillText(endCard.stage===1?'Climb the shaft past the Thread Ripper\'s arena.':'Those sectors come online in the next update. Your save will carry over.',VW/2,312);
   if(t>1.2){g.font='11px Silkscreen,monospace';g.fillStyle='rgba(200,210,240,.7)';g.fillText('PRESS SPACE TO KEEP EXPLORING',VW/2,380)}g.textAlign='left';g.globalAlpha=1}
 function deadDraw(g){const k=Math.min(1,deadT/.5);g.fillStyle=`rgba(10,0,4,${.7*k})`;g.fillRect(0,0,VW,VH);g.textAlign='center';g.font='400 52px Bungee, Impact, sans-serif';
   for(let i=0;i<3;i++){g.fillStyle=['rgba(255,0,80,.6)','rgba(0,255,220,.5)','#fff'][i];g.fillText('SEGMENTATION FAULT',VW/2+(i-1)*4*Math.random()*k,VH/2)}g.font='12px Silkscreen,monospace';g.fillStyle='#cfd8f0';g.fillText('RESTORING FROM LAST RESTORE POINT…',VW/2,VH/2+40);g.textAlign='left'}
@@ -194,8 +206,8 @@ function menuStep(){if(state==='map'){if(I.hit.map||I.hit.pause||I.hit.confirm||
 function pauseDraw(g){g.fillStyle='rgba(2,4,10,.82)';g.fillRect(0,0,VW,VH);if(sub==='controls'){controlsDraw(g);return}g.textAlign='center';g.font='400 44px Bungee, Impact, sans-serif';g.fillStyle='#fff';g.fillText('PAUSED',VW/2,150);
   PAUSE.forEach((it,i)=>{g.font='16px Silkscreen,monospace';g.fillStyle=i===menuI?'#3ee8ff':'#9aa6c2';const label=it==='SOUND'?`SOUND: ${LP.muted?'OFF':'ON'}`:it;g.fillText((i===menuI?'▸ ':'')+label,VW/2,220+i*40)});g.textAlign='left'}
 function controlsDraw(g){g.textAlign='center';g.font='400 36px Bungee, Impact, sans-serif';g.fillStyle='#fff';g.fillText('CONTROLS',VW/2,110);g.font='14px Silkscreen,monospace';
-  const L=[['← →','MOVE'],['↑','JUMP (HOLD FOR HIGHER)'],['↓','DUCK · REST · READ'],['↓ + ↑','DROP THROUGH A PLATFORM'],['SPACE','ATTACK  (HOLD ↑ OR ↓ IN THE AIR TO AIM)'],['E','PACKET SHOT (WHEN FOUND)'],['SHIFT','DASH (WHEN FOUND)'],['HOLD Q','PATCH: HEAL ONE HEART FOR 33 CHARGE'],['M / TAB','MAP'],['ESC / P','PAUSE']];
-  L.forEach(([k,v],i)=>{g.fillStyle='#ffd36b';g.textAlign='right';g.fillText(k,VW/2-20,160+i*32);g.fillStyle='#dfe6ff';g.textAlign='left';g.fillText(v,VW/2+10,160+i*32)});g.textAlign='center';g.font='11px Silkscreen,monospace';g.fillStyle='rgba(200,210,240,.6)';g.fillText('ESC TO GO BACK',VW/2,VH-40);g.textAlign='left'}
+  const L=[['← →','MOVE'],['↑','JUMP (HOLD FOR HIGHER)'],['↓','DUCK · REST · READ'],['↓ + ↑','DROP THROUGH A PLATFORM'],['SPACE','ATTACK · TAP FOR A 5-HIT COMBO'],['','↑/↓ IN THE AIR TO STRIKE UP OR DOWN'],['F','PARRY AS A HIT LANDS → CRIT'],['E','PACKET SHOT (WHEN FOUND)'],['SHIFT','DASH (WHEN FOUND)'],['HOLD Q','PATCH: HEAL ONE HEART FOR 33 CHARGE'],['M / TAB','MAP'],['ESC / P','PAUSE']];g.font='13px Silkscreen,monospace';
+  L.forEach(([k,v],i)=>{g.fillStyle='#ffd36b';g.textAlign='right';g.fillText(k,VW/2-20,140+i*27);g.fillStyle='#dfe6ff';g.textAlign='left';g.fillText(v,VW/2+10,140+i*27)});g.textAlign='center';g.font='11px Silkscreen,monospace';g.fillStyle='rgba(200,210,240,.6)';g.fillText('ESC TO GO BACK',VW/2,VH-40);g.textAlign='left'}
 function mapDraw(g){g.fillStyle='rgba(2,4,10,.9)';g.fillRect(0,0,VW,VH);const seen=Object.keys(LP.save.seen).map(id=>LP.rooms[id]).filter(Boolean);if(!seen.length)return;
   let x0=1e9,y0=1e9,x1=-1e9,y1=-1e9;for(const r of seen){x0=Math.min(x0,r.wx);y0=Math.min(y0,r.wy);x1=Math.max(x1,r.wx+r.w);y1=Math.max(y1,r.wy+r.h)}
   const sc=Math.min(820/(x1-x0),380/(y1-y0),4),ox=(VW-(x1-x0)*sc)/2,oy=(VH-(y1-y0)*sc)/2+10;
@@ -238,7 +250,7 @@ function titleDraw(g){const t=titleT;g.fillStyle='#03050b';g.fillRect(0,0,VW,VH)
 
 /* ---------- loop ---------- */
 let last=performance.now(),acc=0;
-function frame(now){requestAnimationFrame(frame);const dt=Math.min(.1,(now-last)/1000);last=now;if(document.hidden)return;acc+=dt;let n=0;
+function frame(now){requestAnimationFrame(frame);const dt=Math.min(.1,(now-last)/1000);last=now;if(document.hidden)return;LP.slowT=Math.max(0,(LP.slowT||0)-dt);acc+=dt*(LP.slowT>0&&state==='play'?.35:1);let n=0;
   while(acc>=LP.DT&&n<5){step(LP.DT);LP.endStep();acc-=LP.DT;n++}if(n===5)acc=0;render()}
 addEventListener('blur',()=>{if(state==='play'&&!LP.cs){state='pause';menuI=0}});
 addEventListener('pointerdown',()=>{LP.ac();cv.focus()});
@@ -247,25 +259,25 @@ LP.music('title');requestAnimationFrame(frame);
 const CON={lines:[],input:'',hist:[],hi:0,prev:'play',unlocked:(()=>{try{return sessionStorage.getItem('lc-lp-dev')==='1'}catch(e){return false}})()};
 const hash=s=>{let h=5381;for(const c of s)h=((h*33)^c.charCodeAt(0))>>>0;return h};
 const say=(t,c)=>{CON.lines.push({t,c:c||'#cfe3ff'});if(CON.lines.length>14)CON.lines.shift()};
-const ARENA={weaver:{room:'mb_boss',hx:860},ripper:{room:'cpu_boss',hx:120}};
+const ARENA={weaver:{room:'mb_boss',hx:860},ripper:{room:'cpu_boss',hx:120},leak:{room:'ram_boss',hx:120},sector:{room:'ssd_boss',hx:120}};
 function openCon(){if(state!=='play'&&state!=='pause')return;CON.prev='play';state='console';CON.input='';if(!CON.lines.length)say(CON.unlocked?'dev console · type help':'password required','#9aa6c2');LP.sfx('ui')}
 function closeCon(){state='play';LP.I.hit={};LP.sfx('ui')}
-function skipIntro(b){if(!LP.cs)return;LP.cs=null;LP.cam.focus=null;LP.darkOverride=null;LP.overlays.length=0;LP.zoomFX=null;H.ctrl=true;H.frozen=false;const gt=LP.ents.find(e=>e.kind==='gate');gt&&gt.close();
-  if(b.id==='weaver'){b.woke=true;b.landed=true;b.y=350;b.vy=0;b.eye=1}else{b.form=1;b.eye=1;b.armTarget=1;b.copies=[]}if(!['dying'].includes(b.state)){b.state='idle';b.next=.8}LP.music(b.id==='weaver'?'boss':'boss2')}
-function bossCmd(id,intro){const A=ARENA[id];if(!A){say('bosses: weaver, ripper','#ff8a9b');return}delete LP.save.boss[id];if(intro)delete LP.save.cs[id];else LP.save.cs[id]=1;
+function skipIntro(b){if(!LP.cs)return;LP.cs=null;LP.cam.focus=null;LP.darkOverride=null;LP.overlays.length=0;LP.zoomFX=null;H.ctrl=true;H.frozen=false;LP.ents.filter(e=>e.kind==='gate').forEach(gt=>gt.close());
+  if(b.skip)b.skip();else if(b.id==='weaver'){b.woke=true;b.landed=true;b.y=350;b.vy=0;b.eye=1}else{b.form=1;b.eye=1;b.armTarget=1;b.copies=[]}if(!b.skip&&!['dying'].includes(b.state)){b.state='idle';b.next=.8}LP.music(b.music||(b.id==='weaver'?'boss':'boss2'))}
+function bossCmd(id,intro){const A=ARENA[id];if(!A){say('bosses: weaver, ripper, leak, sector','#ff8a9b');return}if(id!=='weaver'){LP.abil.dash=1;LP.abil.grip=1}if(id==='sector')LP.abil.dj=1;delete LP.save.boss[id];if(intro)delete LP.save.cs[id];else LP.save.cs[id]=1;
   if(id==='ripper')LP.abil.dash=1;H.dead=false;H.hearts=LP.maxHearts;H.inv=0;closeCon();curZone=null;enterRoom(A.room,A.hx,420);H.face=id==='weaver'?-1:1;LP.startBoss(id)}
 function devExec(line){const [c,...a]=line.trim().split(/\s+/);const cmd=(c||'').toLowerCase(),arg=(a[0]||'').toLowerCase();if(!cmd)return;
   if(!CON.unlocked){if(hash(line.trim())===900734018){CON.unlocked=true;try{sessionStorage.setItem('lc-lp-dev','1')}catch(e){}say('access granted · type help','#7dff9a');LP.sfx('uiok')}else{say('access denied','#ff6b8b');LP.sfx('hurt')}return}
   LP.devUsed=true;say('> '+line,'#ffd36b');const b=LP.boss;
   switch(cmd){
-    case 'help':['boss weaver|ripper [intro]  fight a boss (intro = full cutscene)','skip           skip the intro cutscene','phase          skip the boss to phase 2','kill           finish the boss off','hp <percent>   set boss health','god            toggle invincibility','give dash|shot|grip|all','heal  ·  charge','tp <room>      teleport (tp alone lists rooms)','laugh          play the laugh','clear  ·  exit'].forEach(l=>say(l,'#cfe3ff'));break;
+    case 'help':['boss weaver|ripper|leak|sector [intro]','       fight a boss (intro = full cutscene)','skip           skip the intro cutscene','phase          skip the boss to phase 2','kill           finish the boss off','hp <percent>   set boss health','god            toggle invincibility','give dash|shot|grip|dj|slam|all','heal  ·  charge','tp <room>      teleport (tp alone lists rooms)','laugh          play the laugh','clear  ·  exit'].forEach(l=>say(l,'#cfe3ff'));break;
     case 'boss':bossCmd(arg,(a[1]||'').toLowerCase()==='intro');return;
     case 'skip':if(b&&LP.cs){skipIntro(b);say('intro skipped','#7dff9a');closeCon()}else say('no cutscene running','#ff8a9b');break;
     case 'phase':if(!b||b.dead)say('no boss fight running','#ff8a9b');else if(b.phase>=2)say('already in phase 2','#ff8a9b');else{skipIntro(b);b.hp=Math.floor(b.max/2)+1;b.hurt(1,1);say('phase 2','#7dff9a');closeCon()}break;
-    case 'kill':case 'finish':if(!b||b.dead||b.state==='dying')say('no boss fight running','#ff8a9b');else{skipIntro(b);b.hurt(b.hp+999,1);say('boss finished','#7dff9a');closeCon()}break;
+    case 'kill':case 'finish':if(!b||b.dead||b.state==='dying')say('no boss fight running','#ff8a9b');else{skipIntro(b);if(b.kill)b.kill();else b.hurt(b.hp+999,1);say('boss finished','#7dff9a');closeCon()}break;
     case 'hp':if(!b)say('no boss fight running','#ff8a9b');else{skipIntro(b);const v=clamp(+arg||1,1,100);b.hp=Math.max(1,Math.round(b.max*v/100));say('boss hp '+v+'%','#7dff9a')}break;
     case 'god':LP.godMode=!LP.godMode;say('god mode '+(LP.godMode?'on':'off'),'#7dff9a');break;
-    case 'give':{const L=arg==='all'?['dash','shot','grip']:[arg];if(!L.every(x=>LP.ABIL[x])){say('give dash|shot|grip|all','#ff8a9b');break}L.forEach(x=>LP.abil[x]=1);LP.save.abil=LP.abil;say('gave '+L.join(', '),'#7dff9a');break}
+    case 'give':{const L=arg==='all'?['dash','shot','grip','dj','slam']:[arg];if(!L.every(x=>LP.ABIL[x])){say('give dash|shot|grip|dj|slam|all','#ff8a9b');break}L.forEach(x=>LP.abil[x]=1);LP.save.abil=LP.abil;say('gave '+L.join(', '),'#7dff9a');break}
     case 'heal':H.hearts=LP.maxHearts;say('healed','#7dff9a');break;
     case 'charge':H.charge=99;say('charge full','#7dff9a');break;
     case 'tp':if(!LP.rooms[arg]){say('rooms: '+Object.keys(LP.rooms).join(' '),'#cfe3ff');break}{const r=LP.rooms[arg],sp=r.spawns.find(x=>x.type==='save'),x=sp?sp.tx*T:3*T,y=sp?(sp.ty+1)*T-40:(r.h-3)*T-40;closeCon();curZone=null;enterRoom(arg,x,y)}return;

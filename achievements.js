@@ -13,6 +13,8 @@ const LIST=[
  {id:'tdwin',     t:'Tape-Out',         d:'Survive all 40 waves of Silicon Siege.'},
  {id:'lp_weaver', t:'Exterminator',     d:'Defeat the Rot Weaver in Last Patch.'},
  {id:'lp_ripper', t:'Thread Safe',      d:'Defeat the Thread Ripper in Last Patch.'},
+ {id:'lp_leak',   t:'Garbage Collected', d:'Defeat the Memory Leak in Last Patch.'},
+ {id:'lp_sector', t:'Defragmented',     d:'Defeat the Bad Sector in Last Patch.'},
  {id:'golden',    t:'Look How Far You’ve Come', d:'Open the locked door at the back of the binder.'}
 ];
 const BY=Object.fromEntries(LIST.map(a=>[a.id,a]));
