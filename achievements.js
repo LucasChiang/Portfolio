@@ -15,6 +15,11 @@ const LIST=[
  {id:'lp_ripper', t:'Thread Safe',      d:'Defeat the Thread Ripper in Last Patch.'},
  {id:'lp_leak',   t:'Garbage Collected', d:'Defeat the Memory Leak in Last Patch.'},
  {id:'lp_sector', t:'Defragmented',     d:'Defeat the Bad Sector in Last Patch.'},
+ {id:'lp_fiend',  t:'Frame Dropped',    d:'Defeat the Render Fiend in Last Patch.'},
+ {id:'lp_runaway',t:'Cooled Down',      d:'Defeat Thermal Runaway in Last Patch.'},
+ {id:'lp_surge',  t:'Grounded',         d:'Defeat the Surge in Last Patch.'},
+ {id:'lp_pixel',  t:'Refreshed',        d:'Defeat the Dead Pixel in Last Patch.'},
+ {id:'lp_rootkit',t:'System Restored',  d:'Remove the Rootkit and finish Last Patch.'},
  {id:'golden',    t:'Look How Far You’ve Come', d:'Open the locked door at the back of the binder.'}
 ];
 const BY=Object.fromEntries(LIST.map(a=>[a.id,a]));

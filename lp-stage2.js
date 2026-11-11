@@ -149,6 +149,7 @@ LP.onSlam=(x,y)=>{for(const e of LP.ents)if(e.enemy&&!e.dead&&Math.hypot(e.x+e.w
 /* ---------- the Husked: townsfolk the rot got into, still carrying their tools ---------- */
 (function(){const LP=window.LP,T=LP.T,H=LP.H,EN=LP.EN,{rand,pick,clamp,appr,sign}=LP;
 const TOOLS={hook:{reach:72,wind:.5,col:'#9aa6c2',box:[0,-62,74,58]},wrench:{reach:56,wind:.45,col:'#c8ccd8',box:[0,-44,58,44]},opener:{reach:86,wind:.4,col:'#e8ecf5',box:[4,-30,88,16]},key:{reach:74,wind:.6,col:'#d9b45a',box:[0,-66,78,66]}};
+LP.HUSK_TOOLS=TOOLS;
 EN.husk=s=>{const tool=s.tool||'hook',TL=TOOLS[tool];const base=EN.crawler({tx:s.tx,ty:s.ty});return Object.assign(base,{kind:'husk',tool,x:s.tx*T+4,y:(s.ty+1)*T-38,w:22,h:38,hp:5,col:'#9aa0ae',dir:-1,st:'walk',stT:0,cd:rand(.3,1),ang:0,
   update(dt){this.t+=dt;this.stT+=dt;this.cd-=dt;this.vy+=2000*dt;const NM=LP.NM,dx=H.x+9-(this.x+11),dy=H.y+H.h-(this.y+this.h),dist=Math.abs(dx);this.flash-=dt;
     switch(this.st){
@@ -168,7 +169,7 @@ EN.husk=s=>{const tool=s.tool||'hook',TL=TOOLS[tool];const base=EN.crawler({tx:s
     const tell=this.st==='wind';g.shadowColor='#c45bff';g.shadowBlur=tell?12:6;g.fillStyle=tell&&Math.sin(t*40)>0?'#fff':'#e070ff';g.beginPath();g.ellipse(8,-36,2,2.6,0,0,6.283);g.ellipse(3,-36,1.8,2.4,0,0,6.283);g.fill();g.shadowBlur=0;
     // the tool
     g.save();g.translate(6,-24);g.rotate(this.ang);const c=TL.col;g.strokeStyle='#4a3a2a';g.lineWidth=3;
-    if(this.tool==='hook'){g.beginPath();g.moveTo(0,0);g.lineTo(52,0);g.stroke();g.strokeStyle=c;g.lineWidth=3;g.beginPath();g.arc(56,8,9,-Math.PI/2,Math.PI*.8);g.stroke();g.fillStyle='#ffc56b';g.beginPath();g.arc(60,18,4,0,6.283);g.fill()}
+    if(TL.draw){TL.draw(g,c)}else if(this.tool==='hook'){g.beginPath();g.moveTo(0,0);g.lineTo(52,0);g.stroke();g.strokeStyle=c;g.lineWidth=3;g.beginPath();g.arc(56,8,9,-Math.PI/2,Math.PI*.8);g.stroke();g.fillStyle='#ffc56b';g.beginPath();g.arc(60,18,4,0,6.283);g.fill()}
     else if(this.tool==='wrench'){g.strokeStyle=c;g.lineWidth=5;g.beginPath();g.moveTo(0,0);g.lineTo(34,0);g.stroke();g.fillStyle=c;g.beginPath();g.arc(40,0,9,0,6.283);g.fill();g.fillStyle='#1a1d24';g.beginPath();g.arc(44,-2,4,0,6.283);g.fill()}
     else if(this.tool==='opener'){g.fillStyle=c;g.beginPath();g.moveTo(0,-3);g.lineTo(66,0);g.lineTo(0,3);g.closePath();g.fill();g.fillStyle='#7fd8ff';g.beginPath();g.arc(0,0,4,0,6.283);g.fill()}
     else{g.strokeStyle=c;g.lineWidth=5;g.beginPath();g.moveTo(14,0);g.lineTo(58,0);g.stroke();g.lineWidth=4;g.beginPath();g.arc(7,0,8,0,6.283);g.stroke();g.fillStyle=c;g.fillRect(48,0,5,12);g.fillRect(56,0,4,8)}

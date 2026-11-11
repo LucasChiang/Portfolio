@@ -52,7 +52,7 @@ PR.bunting=(g,p,Z,R)=>{const X=p.x*T,Y=p.y*T,W=(p.w||6)*T;g.strokeStyle='#14171c
 PR.crates=(g,p,Z,R)=>{const X=p.x*T,Y=p.y*T;const n=p.n||3;for(let i=0;i<n;i++){const s=26+R()*8,x=X+i*24+(i>2?-60:0),y=Y-(i>2?s+26:0);g.fillStyle=shade('#3a2a1a',R()*.1);rr(g,x,y-s,s,s,4);g.fill();g.strokeStyle='#1a120a';g.lineWidth=2;g.beginPath();g.moveTo(x+3,y-s+3);g.lineTo(x+s-3,y-3);g.stroke();
     if(p.label&&i===0)txt(g,p.label,x+s/2,y-s/2+3,7,Z.trim)}};
 PR.barrels=(g,p,Z,R)=>{const X=p.x*T,Y=p.y*T;for(let i=0;i<(p.n||2);i++){const x=X+i*26;g.fillStyle=pick(['#2a3550','#3a2a50','#2a4a3a']);rr(g,x,Y-34,22,34,10);g.fill();g.fillStyle='rgba(255,255,255,.12)';g.fillRect(x+4,Y-30,3,26);g.fillStyle=Z.trim;g.fillRect(x,Y-26,22,2);g.fillRect(x,Y-10,22,2)}};
-PR.husk=(g,p,Z,R)=>{const X=p.x*T+15,Y=p.y*T,s=p.s||1;g.save();g.translate(X,Y);g.scale(p.flip?-s:s,s);
+PR.husk=(g,p,Z,R)=>{if(LP.save&&LP.save.restored&&!p.boss){LP.bitling(g,p.x*T+15,p.y*T,{role:pick(['elder','worker','clerk','kid','archivist'])},R()*9,p.flip?-1:1,false,false);return}const X=p.x*T+15,Y=p.y*T,s=p.s||1;g.save();g.translate(X,Y);g.scale(p.flip?-s:s,s);
   g.fillStyle='rgba(0,0,0,.35)';g.beginPath();g.ellipse(0,0,16,4,0,0,6.283);g.fill();
   const sg=g.createLinearGradient(0,-40,0,0);sg.addColorStop(0,'#8c8f96');sg.addColorStop(1,'#4a4c52');g.fillStyle=sg;
   if(p.pose==='kneel'){g.beginPath();g.ellipse(0,-12,14,12,0,0,6.283);g.fill();g.beginPath();g.arc(4,-28,10,0,6.283);g.fill()}
@@ -119,6 +119,7 @@ function bitling(g,x,y,o,t,look,blink,shiver){const s=o.s||1,B=BIT[o.role]||BIT.
   if(B.hat==='hood'){g.fillStyle='#4a3a2a';g.beginPath();g.ellipse(0,-20+bob,14,15,0,Math.PI*1.05,Math.PI*1.95);g.fill()}
   g.restore()}
 LP.bitling=bitling;
+LP.BIT=BIT;
 P.npc=s=>({kind:'npc',x:s.tx*T+15,y:(s.ty+1)*T,t:Math.random()*9,o:s,i:0,layer:'back',blinkT:2,
   lines(){const d=this.o.req&&LP.save.boss[this.o.req]&&this.o.after?this.o.after:this.o.say;return d},
   update(dt){this.t+=dt;this.blinkT-=dt;if(this.blinkT<-.12)this.blinkT=rand(1.5,4);this.near=Math.abs(H.x+9-this.x)<40&&Math.abs(H.y+H.h-this.y)<20;
